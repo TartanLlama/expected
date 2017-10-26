@@ -1,0 +1,10 @@
+os:
+- Visual Studio 2015
+- Visual Studio 2017
+
+build_script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - cmake --build .
+  - C:\projects\expected\build\Debug\tests.exe

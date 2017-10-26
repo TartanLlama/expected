@@ -17,6 +17,11 @@
 #include <type_traits>
 
 namespace tl {
+    namespace detail {
+template <bool E, class T = void>
+using enable_if_t = typename std::enable_if<E, T>::type;
+    }
+
     template <class E>
     class unexpected {
     public:

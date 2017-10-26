@@ -63,6 +63,26 @@ using enable_if_t = typename std::enable_if<E, T>::type;
     operator!=(const unexpected<E>& lhs, const unexpected<E>& rhs) {
         return lhs.value() != rhs.value();
     }
+    template <class E>
+    constexpr bool
+    operator<(const unexpected<E>& lhs, const unexpected<E>& rhs) {
+        return lhs.value() < rhs.value();
+    }
+    template <class E>
+    constexpr bool
+    operator<=(const unexpected<E>& lhs, const unexpected<E>& rhs) {
+        return lhs.value() <= rhs.value();
+    }
+    template <class E>
+    constexpr bool
+    operator>(const unexpected<E>& lhs, const unexpected<E>& rhs) {
+        return lhs.value() > rhs.value();
+    }
+    template <class E>
+    constexpr bool
+    operator>=(const unexpected<E>& lhs, const unexpected<E>& rhs) {
+        return lhs.value() >= rhs.value();
+    }
 
     struct unexpect_t {
         unexpect_t() = default;
@@ -292,11 +312,11 @@ class expected : private detail::expected_storage_base<T,E>, private detail::exp
     static_assert(!std::is_reference<E>::value, "E must not be a reference");
     static_assert(!std::is_same<T, void>::value, "T must not be void");
 
-    T* valptr() { return std::addressof(this->m_value); }
+    T* valptr() { return std::addressof(this->m_val); }
     unexpected<E>* errptr() { return std::addressof(this->m_unexpect); }
-    T& val() { return this->m_value; }
+    T& val() { return this->m_val; }
     unexpected<E>& err() { return this->m_unexpect; }
-    const T& val() const { return this->m_value; }
+    const T& val() const { return this->m_val; }
     const unexpected<E>& err() const { return this->m_unexpect; }
 
     using storage_base = detail::expected_storage_base<T,E>;

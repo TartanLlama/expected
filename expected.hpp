@@ -432,6 +432,7 @@ public:
   typedef E error_type;
   typedef unexpected<E> unexpected_type;
 
+#ifdef TL_EXPECTED_CXX14    
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
@@ -485,6 +486,64 @@ public:
                                     : move(this->error()));
   }
 #endif
+
+#else
+  /// \group and_then
+  /// Carries out some operation which returns an optional on the stored object
+  /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
+  /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
+  /// of `std::invoke(std::forward<F>(f), value())`. Returns a
+  /// `std::optional<U>`. The return value is empty if `*this` is empty,
+  /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
+  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
+  /// and_then(F &&f) &;
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR detail::invoke_result_t<F, T &> and_then(F &&f) & {
+    using result = detail::invoke_result_t<F, T &>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(unexpect, this->error());
+  }
+
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &&;
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR detail::invoke_result_t<F, T &&> and_then(F &&f) && {
+    using result = detail::invoke_result_t<F, T &&>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+        : result(unexpect, std::move(this->error()));
+  }
+
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &;
+  template <class F>
+  constexpr detail::invoke_result_t<F, const T &> and_then(F &&f) const & {
+    using result = detail::invoke_result_t<F, const T &>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+        : result(unexpect, this->error());
+  }
+
+#ifndef TL_EXPECTED_NO_CONSTRR
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
+  template <class F>
+  constexpr detail::invoke_result_t<F, const T &&> and_then(F &&f) const && {
+    using result = detail::invoke_result_t<F, const T &&>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+        : result(unexpect, std::move(this->error()));
+  }
+#endif    
 
 #ifdef TL_EXPECTED_CXX14
   /// \brief Carries out some operation on the stored object if there is one.

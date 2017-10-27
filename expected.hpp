@@ -432,7 +432,7 @@ public:
   typedef E error_type;
   typedef unexpected<E> unexpected_type;
 
-#ifdef TL_EXPECTED_CXX14    
+#ifdef TL_EXPECTED_CXX14
   /// \group and_then
   /// Carries out some operation which returns an optional on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
@@ -516,7 +516,7 @@ public:
                   "F must return an expected");
 
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
-        : result(unexpect, std::move(this->error()));
+                       : result(unexpect, std::move(this->error()));
   }
 
   /// \group and_then
@@ -528,7 +528,7 @@ public:
                   "F must return an expected");
 
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
-        : result(unexpect, this->error());
+                       : result(unexpect, this->error());
   }
 
 #ifndef TL_EXPECTED_NO_CONSTRR
@@ -541,8 +541,9 @@ public:
                   "F must return an expected");
 
     return has_value() ? detail::invoke(std::forward<F>(f), **this)
-        : result(unexpect, std::move(this->error()));
+                       : result(unexpect, std::move(this->error()));
   }
+#endif
 #endif    
 
 #ifdef TL_EXPECTED_CXX14
@@ -601,6 +602,68 @@ public:
                               std::declval<F &&>()))
   map(F &&f) const && {
     return map_impl(std::move(*this), std::forward<F>(f));
+  }
+#endif
+#endif
+
+#ifdef TL_EXPECTED_CXX14
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::expected<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned. \group map_error \synopsis template <class F> auto map_error(F
+  /// &&f) &;
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto map_error(F &&f) & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto map_error(F &&f) && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  template <class F> constexpr auto map_error(F &&f) const & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+
+  template <class F> constexpr auto map_error(F &&f) const && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
+  }
+#else
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::expected<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned. \group map_error \synopsis template <class F> auto map_error(F
+  /// &&f) &;
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(map_error_impl(std::declval<expected &>(),
+                                                   std::declval<F &&>()))
+  map_error(F &&f) & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(map_error_impl(std::declval<expected &&>(),
+                                                   std::declval<F &&>()))
+  map_error(F &&f) && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  template <class F>
+  constexpr decltype(map_error_impl(std::declval<const expected &>(),
+                                    std::declval<F &&>()))
+  map_error(F &&f) const & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+
+#ifndef TL_EXPECTED_NO_CONSTRR
+  template <class F>
+  constexpr decltype(map_error_impl(std::declval<const expected &&>(),
+                                    std::declval<F &&>()))
+  map_error(F &&f) const && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
 #endif
@@ -866,6 +929,31 @@ private:
     }
 
     return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
+  }
+#endif
+
+#ifdef TL_EXPECTED_CXX14
+  template <class Exp, class F,
+            class Ret = decltype(detail::invoke(std::declval<F>(),
+                                                *std::declval<Exp>()))>
+  static constexpr auto map_error_impl(Exp &&exp, F &&f) {
+    using result = ret_t<Exp, Ret>;
+    return exp.has_value()
+               ? result(*std::forward<Exp>(exp))
+               : result(unexpect,
+                        detail::invoke(std::forward<F>(f),
+                                       std::forward<Exp>(exp).error()));
+  }
+#else
+  template <class Exp, class F,
+            class Ret = decltype(detail::invoke(std::declval<F>(),
+                                                *std::declval<Exp>()))>
+  static constexpr auto map_error_impl(Exp &&exp, F &&f) -> ret_t<Exp, Ret> {
+    using result = ret_t<Exp, Ret>;
+
+    return exp.has_value() ? result(detail::invoke(std::forward<F>(f),
+                                                   *std::forward<Exp>(exp)))
+                           : result(unexpect, std::forward<Exp>(exp).error());
   }
 #endif
 };

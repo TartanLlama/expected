@@ -50,10 +50,18 @@
 #endif
 
 namespace tl {
+template <class T, class E> class expected;
+
 namespace detail {
 template <bool E, class T = void>
 using enable_if_t = typename std::enable_if<E, T>::type;
 template <class T> using decay_t = typename std::decay<T>::type;
+
+// Trait for checking if a type is a tl::expected
+template <class T> struct is_expected_impl : std::false_type {};
+template <class T, class E>
+struct is_expected_impl<expected<T, E>> : std::true_type {};
+template <class T> using is_expected = is_expected_impl<decay_t<T>>;
 
 // std::invoke from C++17
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
@@ -424,6 +432,60 @@ public:
   typedef E error_type;
   typedef unexpected<E> unexpected_type;
 
+  /// \group and_then
+  /// Carries out some operation which returns an optional on the stored object
+  /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
+  /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
+  /// of `std::invoke(std::forward<F>(f), value())`. Returns a
+  /// `std::optional<U>`. The return value is empty if `*this` is empty,
+  /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
+  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
+  /// and_then(F &&f) &;
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto and_then(F &&f) & {
+    using result = detail::invoke_result_t<F, T &>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(unexpect, this->error());
+  }
+
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &&;
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto and_then(F &&f) && {
+    using result = detail::invoke_result_t<F, T &&>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(unexpect, std::move(this->error()));
+  }
+
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &;
+  template <class F> constexpr auto and_then(F &&f) const & {
+    using result = detail::invoke_result_t<F, const T &>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+                       : result(unexpect, this->error());
+  }
+
+#ifndef TL_EXPECTED_NO_CONSTRR
+  /// \group and_then
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
+  template <class F> constexpr auto and_then(F &&f) const && {
+    using result = detail::invoke_result_t<F, const T &&>;
+    static_assert(detail::is_expected<result>::value,
+                  "F must return an expected");
+
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
+                       : result(unexpect, std::
+                                    : move(this->error()));
+  }
+#endif
+
 #ifdef TL_EXPECTED_CXX14
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
@@ -691,28 +753,33 @@ public:
   }
 
 private:
-#ifdef TL_EXPECTED_CX14
+  template <class Exp> using err_t = typename detail::decay_t<Exp>::error_type;
+  template <class Exp, class Ret> using ret_t = expected<Ret, err_t<Exp>>;
+
+#ifdef TL_EXPECTED_CXX14
   template <class Exp, class F,
             class Ret = decltype(detail::invoke(std::declval<F>(),
                                                 *std::declval<Exp>())),
             detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
-  constexpr auto map_impl(Exp &&exp, F &&f) {
-    return exp.has_value()
-               ? detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp))
-        : unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+  static constexpr auto map_impl(Exp &&exp, F &&f) {
+    using result = ret_t<Exp, Ret>;
+    return exp.has_value() ? result(detail::invoke(std::forward<F>(f),
+                                                   *std::forward<Exp>(exp)))
+                           : result(unexpect, std::forward<Exp>(exp).error());
   }
 
   template <class Exp, class F,
             class Ret = decltype(detail::invoke(std::declval<F>(),
                                                 *std::declval<Exp>())),
             detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
-  auto map_impl(Exp &&exp, F &&f) {
+  static auto map_impl(Exp &&exp, F &&f) {
+    using result = expected<monostate, err_t<Exp>>;
     if (exp.has_value()) {
       detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp));
-      return monostate{};
+      return result(monostate{});
     }
 
-    return unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+    return result(unexpect, std::forward<Exp>(exp).error());
   }
 #else
   template <class Exp, class F,
@@ -720,11 +787,12 @@ private:
                                                 *std::declval<Exp>())),
             detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 
-  constexpr auto map_impl(Exp &&exp, F &&f)
-      -> expected<Ret, typename Exp::error_type> {
-    return exp.has_value()
-               ? detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp))
-        : unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+  static constexpr auto map_impl(Exp &&exp, F &&f) -> ret_t<Exp, Ret> {
+    using result = ret_t<Exp, Ret>;
+
+    return exp.has_value() ? result(detail::invoke(std::forward<F>(f),
+                                                   *std::forward<Exp>(exp)))
+                           : result(unexpect, std::forward<Exp>(exp).error());
   }
 
   template <class Exp, class F,
@@ -732,14 +800,13 @@ private:
                                                 *std::declval<Exp>())),
             detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
 
-  auto map_impl(Exp &&exp, F &&f)
-      -> expected<monostate, typename Exp::error_type> {
+  static auto map_impl(Exp &&exp, F &&f) -> expected<monostate, err_t<Exp>> {
     if (exp.has_value()) {
       detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp));
-      return std::forward<Exp>(exp).error();
+      return tl::monostate{};
     }
 
-    return unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+    return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
   }
 #endif
 };

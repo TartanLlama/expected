@@ -15,17 +15,88 @@
 #define TL_EXPECTED_HPP
 
 #include <exception>
+#include <functional>
 #include <type_traits>
 #include <utility>
+
+#if (defined(_MSC_VER) && _MSC_VER == 1900)
+#define TL_EXPECTED_MSVC2015
+#endif
+
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#define TL_EXPECTED_GCC49
+#endif
+
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4)
+#define TL_EXPECTED_GCC54
+#endif
+
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#define TL_EXPECTED_NO_CONSTRR
+#endif
+
+#if __cplusplus > 201103L
+#define TL_EXPECTED_CXX14
+#endif
+
+#if (__cplusplus == 201103L || defined(TL_EXPECTED_MSVC2015) ||                \
+     defined(TL_EXPECTED_GCC49)) &&                                            \
+    !defined(TL_EXPECTED_GCC50)
+/// \exclude
+#define TL_EXPECTED_11_CONSTEXPR
+#else
+/// \exclude
+#define TL_EXPECTED_11_CONSTEXPR constexpr
+#endif
 
 namespace tl {
 namespace detail {
 template <bool E, class T = void>
 using enable_if_t = typename std::enable_if<E, T>::type;
+template <class T> using decay_t = typename std::decay<T>::type;
+
+// std::invoke from C++17
+// https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
+template <typename Fn, typename... Args,
+          typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
+          int = 0>
+constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
+    noexcept(std::mem_fn(f)(std::forward<Args>(args)...)))
+    -> decltype(std::mem_fn(f)(std::forward<Args>(args)...)) {
+  return std::mem_fn(f)(std::forward<Args>(args)...);
 }
 
-#ifndef TL_IN_PLACE_T_DEFINED
-#define TL_IN_PLACE_T_DEFINED
+template <typename Fn, typename... Args,
+          typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
+constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
+    noexcept(std::forward<Fn>(f)(std::forward<Args>(args)...)))
+    -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
+  return std::forward<Fn>(f)(std::forward<Args>(args)...);
+}
+
+// std::invoke_result from C++17
+template <class F, class, class... Us> struct invoke_result_impl;
+
+template <class F, class... Us>
+struct invoke_result_impl<
+    F, decltype(invoke(std::declval<F>(), std::declval<Us>()...), void()),
+    Us...> {
+  using type = decltype(invoke(std::declval<F>(), std::declval<Us>()...));
+};
+
+template <class F, class... Us>
+using invoke_result = invoke_result_impl<F, void, Us...>;
+
+template <class F, class... Us>
+using invoke_result_t = typename invoke_result<F, Us...>::type;
+
+} // namespace detail
+
+#ifndef TL_IN_PLACE_MONOSTATE_DEFINED
+#define TL_IN_PLACE_MONOSTATE_DEFINED
+/// \brief Used to represent an optional with no data; essentially a bool
+class monostate {};
+
 /// \brief A tag type to tell optional to construct its value in-place
 struct in_place_t {
   explicit in_place_t() = default;
@@ -353,6 +424,66 @@ public:
   typedef E error_type;
   typedef unexpected<E> unexpected_type;
 
+#ifdef TL_EXPECTED_CXX14
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::expected<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto map(F &&f) & {
+    return map_impl(*this, std::forward<F>(f));
+  }
+
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto map(F &&f) && {
+    return map_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  template <class F> constexpr auto map(F &&f) const & {
+    return map_impl(*this, std::forward<F>(f));
+  }
+
+  template <class F> constexpr auto map(F &&f) const && {
+    return map_impl(std::move(*this), std::forward<F>(f));
+  }
+#else
+  /// \brief Carries out some operation on the stored object if there is one.
+  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
+  /// value())`. Returns a `std::expected<U>`. The return value is empty if
+  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
+  /// return value of `std::invoke(std::forward<F>(f), value())` and is
+  /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(map_impl(std::declval<expected &>(),
+                                             std::declval<F &&>()))
+  map(F &&f) & {
+    return map_impl(*this, std::forward<F>(f));
+  }
+
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(map_impl(std::declval<expected &&>(),
+                                             std::declval<F &&>()))
+  map(F &&f) && {
+    return map_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  template <class F>
+  constexpr decltype(map_impl(std::declval<const expected &>(),
+                              std::declval<F &&>()))
+  map(F &&f) const & {
+    return map_impl(*this, std::forward<F>(f));
+  }
+
+#ifndef TL_EXPECTED_NO_CONSTRR
+  template <class F>
+  constexpr decltype(map_impl(std::declval<const expected &&>(),
+                              std::declval<F &&>()))
+  map(F &&f) const && {
+    return map_impl(std::move(*this), std::forward<F>(f));
+  }
+#endif
+#endif
+
   constexpr expected() = default;
 
   template <class... Args,
@@ -558,6 +689,59 @@ public:
                   "T must be move-constructible and convertible to from U&&");
     return bool(*this) ? std::move(**this) : static_cast<T>(std::forward<U>(v));
   }
+
+private:
+#ifdef TL_EXPECTED_CX14
+  template <class Exp, class F,
+            class Ret = decltype(detail::invoke(std::declval<F>(),
+                                                *std::declval<Exp>())),
+            detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+  constexpr auto map_impl(Exp &&exp, F &&f) {
+    return exp.has_value()
+               ? detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp))
+        : unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+  }
+
+  template <class Exp, class F,
+            class Ret = decltype(detail::invoke(std::declval<F>(),
+                                                *std::declval<Exp>())),
+            detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+  auto map_impl(Exp &&exp, F &&f) {
+    if (exp.has_value()) {
+      detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp));
+      return monostate{};
+    }
+
+    return unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+  }
+#else
+  template <class Exp, class F,
+            class Ret = decltype(detail::invoke(std::declval<F>(),
+                                                *std::declval<Exp>())),
+            detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+
+  constexpr auto map_impl(Exp &&exp, F &&f)
+      -> expected<Ret, typename Exp::error_type> {
+    return exp.has_value()
+               ? detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp))
+        : unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+  }
+
+  template <class Exp, class F,
+            class Ret = decltype(detail::invoke(std::declval<F>(),
+                                                *std::declval<Exp>())),
+            detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+
+  auto map_impl(Exp &&exp, F &&f)
+      -> expected<monostate, typename Exp::error_type> {
+    if (exp.has_value()) {
+      detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp));
+      return std::forward<Exp>(exp).error();
+    }
+
+    return unexpected<typename Exp::error_type>(std::forward<Exp>(exp).error());
+  }
+#endif
 };
 
 // TODO

@@ -42,7 +42,7 @@
 
 #if (__cplusplus == 201103L || defined(TL_EXPECTED_MSVC2015) ||                \
      defined(TL_EXPECTED_GCC49)) &&                                            \
-    !defined(TL_EXPECTED_GCC50)
+    !defined(TL_EXPECTED_GCC54)
 /// \exclude
 #define TL_EXPECTED_11_CONSTEXPR
 #else
@@ -995,7 +995,7 @@ public:
     void emplace(std::initializer_list<U> il, Args &&... args) {
         if (has_value()) {
             T t (il, std::forward<Args>(args)...);
-            *val = std::move(t);
+            val() = std::move(t);
         }
         else {
             err().~unexpected<E>();
@@ -1009,7 +1009,7 @@ public:
     void emplace(std::initializer_list<U> il, Args &&... args) {
         if (has_value()) {
             T t (il, std::forward<Args>(args)...);
-            *val = std::move(t);
+            val() = std::move(t);
         }
         else {
             auto tmp = std::move(err());

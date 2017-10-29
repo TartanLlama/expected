@@ -58,6 +58,13 @@ template <bool E, class T = void>
 using enable_if_t = typename std::enable_if<E, T>::type;
 template <class T> using decay_t = typename std::decay<T>::type;
 
+// std::conjunction from C++17
+template <class...> struct conjunction : std::true_type {};
+template <class B> struct conjunction<B> : B {};
+template <class B, class... Bs>
+struct conjunction<B, Bs...>
+    : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
+
 // Trait for checking if a type is a tl::expected
 template <class T> struct is_expected_impl : std::false_type {};
 template <class T, class E>
@@ -795,15 +802,229 @@ public:
                              std::is_convertible<U &&, T>::value> * = nullptr>
   constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
-  // TODO
-  expected &operator=(const expected &);
-  expected &operator=(expected &&) noexcept;
-  template <class U = T> expected &operator=(U &&);
-  template <class G = E> expected &operator=(const unexpected<G> &);
-  template <class G = E> expected &operator=(unexpected<G> &&) noexcept;
-  template <class... Args> void emplace(Args &&...);
-  template <class U, class... Args>
-  void emplace(std::initializer_list<U>, Args &&...);
+  // TODO conditionally delete
+    template <class U = T, detail::enable_if_t<std::is_nothrow_copy_constructible<U>::value>* = nullptr>
+    expected &operator=(const expected &rhs) noexcept {
+        if (!has_value() && rhs.has_value()) {
+            err().~unexpected<E>();
+            ::new (valptr()) T (*rhs);
+            this->m_has_value = true;
+            return *this;
+        }
+
+        return assign(rhs);
+    }
+
+    template <class U = T, detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value && std::is_nothrow_move_constructible<U>::value>* = nullptr>
+    expected &operator=(const expected &rhs) noexcept {
+        if (!has_value() && rhs.has_value()) {
+            T tmp = *rhs;
+            err().~unexpected<E>();
+            ::new (valptr()) T (std::move(tmp));
+            this->m_has_value = true;
+            return *this;
+        }
+
+        return assign(rhs);
+    }
+
+    template <class U = T, detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value && !std::is_nothrow_move_constructible<U>::value>* = nullptr>
+    expected &operator=(const expected &rhs) {
+        if (!has_value() && rhs.has_value()) {
+            auto tmp = std::move(err());
+            err().~unexpected<E>();
+
+            try {
+                ::new (valptr()) T (*rhs);
+                this->m_has_value = true;
+            }
+            catch(...) {
+                err() = std::move(tmp);
+                throw;
+            }
+            this->m_has_value = true;
+            return *this;
+        }
+
+        return assign(rhs);
+    }
+
+        template <class U = T, detail::enable_if_t<std::is_nothrow_move_constructible<U>::value>* = nullptr>
+        expected &operator=(expected && rhs) noexcept {
+            if (!has_value() && rhs.has_value()) {
+                err().~unexpected<E>();
+                ::new (valptr()) T (*std::move(rhs));
+            }
+
+            return assign(rhs);
+        }
+
+        template <class U = T, detail::enable_if_t<!std::is_nothrow_move_constructible<U>::value>* = nullptr>
+        expected &operator=(expected && rhs) {
+            if (!has_value() && rhs.has_value()) {
+                auto tmp = std::move(err());
+                err().~unexpected<E>();
+                try {
+                    ::new (valptr()) T (*std::move(rhs));
+                    this->m_has_value = true;
+                }
+                catch (...) {
+                    err() = std::move(tmp);
+                    throw;
+                }
+            }
+
+            return assign(rhs);
+        }
+
+    template <class U = T,
+              detail::enable_if_t<
+                  (!std::is_same<expected<T,E>, detail::decay_t<U>>::value &&
+                   !detail::conjunction<std::is_scalar<T>, std::is_same<T, detail::decay_t<U>>>::value &&
+                   std::is_constructible<T, U>::value &&
+                   std::is_assignable<T&, U>::value &&
+                   std::is_nothrow_move_constructible<E>::value)>* = nullptr,                 detail::enable_if_t<std::is_nothrow_constructible<T, U&&>::value>* = nullptr>
+   expected &operator=(U &&v) {
+        if (has_value()) {
+            val() = std::forward<U>(v);
+        }
+        else {
+            err().~unexpected<E>();
+            ::new (valptr()) T (std::forward<U>(v));
+            this->m_has_value = true;
+        }
+
+        return *this;
+    }
+
+    template <class U = T,
+              detail::enable_if_t<
+                  (!std::is_same<expected<T,E>, detail::decay_t<U>>::value &&
+                   !detail::conjunction<std::is_scalar<T>, std::is_same<T, detail::decay_t<U>>>::value &&
+                   std::is_constructible<T, U>::value &&
+                   std::is_assignable<T&, U>::value &&
+                   std::is_nothrow_move_constructible<E>::value)>* = nullptr,
+              detail::enable_if_t<!std::is_nothrow_constructible<T, U&&>::value>* = nullptr>
+   expected &operator=(U &&v) {
+        if (has_value()) {
+            val() = std::forward<U>(v);
+        }
+        else {
+            auto tmp = std::move(err());
+            err().~unexpected<E>();
+            try {
+                ::new (valptr()) T (std::move(v));
+                this->m_has_value = true;
+            }
+            catch (...) {
+                err() = std::move(tmp);
+                throw;
+            }
+        }
+
+        return *this;
+    }
+
+
+    template <class G = E,
+              detail::enable_if_t<std::is_nothrow_copy_constructible<E>::value && std::is_assignable<E&, E>::value>* = nullptr>
+        expected &operator=(const unexpected<G> &rhs) {
+        if (!has_value()) {
+            err() = rhs;
+        }
+        else {
+            val().~T();
+            ::new (errptr()) unexpected<E> (rhs);
+            this->m_has_val = false;
+        }
+
+        return *this;
+    }
+
+    template <class G = E,
+              detail::enable_if_t<std::is_nothrow_move_constructible<E>::value && std::is_move_assignable<E>::value>* = nullptr>
+        expected &operator=(unexpected<G> && rhs) noexcept {
+        if (!has_value()) {
+            err() = std::move(rhs);
+        }
+        else {
+            val().~T();
+            ::new (errptr()) unexpected<E> (std::move(rhs));
+            this->m_has_val = false;
+        }
+
+        return *this;
+    }
+
+    template <class... Args,
+              detail::enable_if_t<std::is_nothrow_constructible<T, Args&&...>::value>* = nullptr>
+        void emplace(Args &&... args) {
+        if (has_value()) {
+            val() = T(std::forward<Args>(args)...);
+        }
+        else {
+            err().~unexpected<E>();
+            ::new (valptr()) T (std::forward<Args>(args)...);
+            this->m_has_value = true;
+        }
+    }
+
+    template <class... Args,
+              detail::enable_if_t<!std::is_nothrow_constructible<T, Args&&...>::value>* = nullptr>
+        void emplace(Args &&... args) {
+        if (has_value()) {
+            val() = T(std::forward<Args>(args)...);
+        }
+        else {
+            auto tmp = std::move(err());
+            err().~unexpected<E>();
+
+            try {
+                ::new (valptr()) T (std::forward<Args>(args)...);
+                this->m_has_value = true;
+            }
+            catch (...) {
+                err() = std::move(tmp);
+                throw;
+            }
+        }
+    }
+
+    template <class U, class... Args,
+              detail::enable_if_t<std::is_nothrow_constructible<T, std::initializer_list<U>&, Args&&...>::value>* = nullptr>
+    void emplace(std::initializer_list<U> il, Args &&... args) {
+        if (has_value()) {
+            T t (il, std::forward<Args>(args)...);
+            *val = std::move(t);
+        }
+        else {
+            err().~unexpected<E>();
+            ::new (valptr()) T (il, std::forward<Args>(args)...);
+            this->m_has_value = true;
+        }
+    }
+
+    template <class U, class... Args,
+              detail::enable_if_t<!std::is_nothrow_constructible<T, std::initializer_list<U>&, Args&&...>::value>* = nullptr>
+    void emplace(std::initializer_list<U> il, Args &&... args) {
+        if (has_value()) {
+            T t (il, std::forward<Args>(args)...);
+            *val = std::move(t);
+        }
+        else {
+            auto tmp = std::move(err());
+            err().~unexpected<E>();
+
+            try {
+                ::new (valptr()) T (il, std::forward<Args>(args)...);
+                this->m_has_value = true;
+            }
+            catch (...) {
+                err() = std::move(tmp);
+                throw;
+            }
+        }
+    }
 
   // TODO SFINAE
   void swap(expected &rhs) noexcept(
@@ -874,6 +1095,28 @@ public:
                   "T must be move-constructible and convertible to from U&&");
     return bool(*this) ? std::move(**this) : static_cast<T>(std::forward<U>(v));
   }
+
+
+private:
+        template <class Rhs>
+        expected& assign(Rhs&& rhs) {
+        if (has_value()) {
+            if (rhs.has_value()) {
+                val() = *std::forward<Rhs>(rhs);
+            }
+            else {
+                val().~T();
+                ::new (errptr()) unexpected<E> (std::forward<Rhs>(rhs).err());
+            }
+        }
+        else {
+            if (!rhs.has_value()) {
+                err() = std::forward<Rhs>(rhs).err();
+            }
+        }
+
+            return *this;
+        }
 };
 
     namespace detail {
@@ -960,6 +1203,8 @@ public:
                                        std::forward<Exp>(exp).error()));
   }
 #endif
+
+
     }
 
 // TODO

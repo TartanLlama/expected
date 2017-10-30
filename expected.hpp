@@ -544,7 +544,7 @@ public:
                        : result(unexpect, std::move(this->error()));
   }
 #endif
-#endif    
+#endif
 
 #ifdef TL_EXPECTED_CXX14
   /// \brief Carries out some operation on the stored object if there is one.
@@ -961,37 +961,79 @@ private:
 // TODO
 template <class E> class expected<void, E> {};
 
-template <class T, class E>
+template <class T, class E, class U, class F>
 constexpr bool operator==(const expected<T, E> &lhs,
-                          const expected<T, E> &rhs) {
+                          const expected<U, F> &rhs) {
   return (lhs.has_value() != rhs.has_value())
              ? false
              : (!lhs.has_value() ? lhs.error() == rhs.error() : *lhs == *rhs);
 }
-template <class T, class E>
+template <class T, class E, class U, class F>
 constexpr bool operator!=(const expected<T, E> &lhs,
-                          const expected<T, E> &rhs) {
+                          const expected<U, F> &rhs) {
+  return (lhs.has_value() != rhs.has_value())
+             ? true
+             : (!lhs.has_value() ? lhs.error() != rhs.error() : *lhs != *rhs);
+}
+    template <class T, class E, class U, class F>
+constexpr bool operator<(const expected<T, E> &lhs, const expected<U, F> &rhs) {
   return (lhs.has_value() != rhs.has_value())
              ? true
              : (!lhs.has_value() ? lhs.error() != rhs.error() : *lhs != *rhs);
 }
 
-template <class T, class E>
-constexpr bool operator==(const expected<T, E> &x, const T &v) {
+// TODO others
+
+template <class T, class E, class U>
+constexpr bool operator==(const expected<T, E> &x, const U &v) {
   return x.has_value() ? *x == v : false;
 }
-template <class T, class E>
-constexpr bool operator==(const T &v, const expected<T, E> &x) {
+template <class T, class E, class U>
+constexpr bool operator==(const U &v, const expected<T, E> &x) {
   return x.has_value() ? *x == v : false;
 }
-template <class T, class E>
-constexpr bool operator!=(const expected<T, E> &x, const T &v) {
+template <class T, class E, class U>
+constexpr bool operator!=(const expected<T, E> &x, const U &v) {
   return x.has_value() ? *x != v : true;
 }
-template <class T, class E>
-constexpr bool operator!=(const T &v, const expected<T, E> &x) {
+template <class T, class E, class U>
+constexpr bool operator!=(const U &v, const expected<T, E> &x) {
   return x.has_value() ? *x != v : true;
 }
+template <class T, class E, class U>
+constexpr bool operator<(const expected<T, E> &x, const U &v) {
+  return x.has_value() ? *x < v : true;
+}
+template <class T, class E, class U>
+constexpr bool operator<(const U &v, const expected<T, E> &x) {
+  return x.has_value() ? v < *x : false;
+}
+template <class T, class E, class U>
+constexpr bool operator<=(const expected<T, E> &x, const U &v) {
+  return x.has_value() ? *x <= v : true;
+}
+template <class T, class E, class U>
+constexpr bool operator<=(const U &v, const expected<T, E> &x) {
+  return x.has_value() ? v <= *x : false;
+}
+template <class T, class E, class U>
+constexpr bool operator>(const expected<T, E> &x, const U &v) {
+  return x.has_value() ? *x > v : false;
+}
+template <class T, class E, class U>
+constexpr bool operator>(const U &v, const expected<T, E> &x) {
+  return x.has_value() ? v > *x : true;
+}
+template <class T, class E, class U>
+constexpr bool operator>=(const expected<T, E> &x, const U &v) {
+  return x.has_value() ? *x >= v : false;
+}
+template <class T, class E, class U>
+constexpr bool operator>=(const U &v, const expected<T, E> &x) {
+  return x.has_value() ? v >= *x : true;
+}
+
+// TODO others
 
 template <class T, class E>
 constexpr bool operator==(const expected<T, E> &x, const unexpected<E> &e) {
@@ -1008,6 +1050,38 @@ constexpr bool operator!=(const expected<T, E> &x, const unexpected<E> &e) {
 template <class T, class E>
 constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
   return x.has_value() ? false : x.error() != e.value();
+}
+template <class T, class E>
+constexpr bool operator<(const expected<T, E> &x, const unexpected<E> &e) {
+  return false;
+}
+template <class T, class E>
+constexpr bool operator<(const unexpected<E> &e, const expected<T, E> &x) {
+  return x.has_value();
+}
+template <class T, class E>
+constexpr bool operator<=(const expected<T, E> &x, const unexpected<E> &e) {
+  return !x.has_value();
+}
+template <class T, class E>
+constexpr bool operator<=(const unexpected<E> &e, const expected<T, E> &x) {
+  return true;
+}
+template <class T, class E>
+constexpr bool operator>(const expected<T, E> &x, const unexpected<E> &e) {
+  return x.has_value();
+}
+template <class T, class E>
+constexpr bool operator>(const unexpected<E> &e, const expected<T, E> &x) {
+  return false;
+}
+template <class T, class E>
+constexpr bool operator>=(const expected<T, E> &x, const unexpected<E> &e) {
+  return true;
+}
+template <class T, class E>
+constexpr bool operator>=(const unexpected<E> &e, const expected<T, E> &x) {
+  return !x.has_value();
 }
 
 // TODO is_swappable

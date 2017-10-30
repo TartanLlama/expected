@@ -399,6 +399,50 @@ template <class E> struct expected_storage_base<void, E, false, false> {
 
 // TODO, conditionally delete things
     template <class T, class E> struct expected_ctor_base {};
+    template <class T, class E,
+              bool = (std::is_copy_assignable<T>::value && std::is_copy_assignable<E>::value &&
+                      std::is_copy_constructible<E>::value && std::is_copy_constructible<T>::value &&
+                      std::is_nothrow_move_constructible<E>::value),
+              bool = (std::is_move_constructible<T>::value && std::is_move_assignable<T>::value &&
+                      std::is_nothrow_move_constructible<E>::value && std::is_nothrow_move_assignable<E>::value)>
+    struct expected_assign_base {
+        expected_assign_base() = default;
+        ~expected_assign_base() = default;
+        expected_assign_base(const expected_assign_base&) = default;
+        expected_assign_base(expected_assign_base&&) noexcept = default;
+        expected_assign_base& operator=(const expected_assign_base&) = default;
+        expected_assign_base& operator=(expected_assign_base&&) noexcept = default;
+    };
+
+    template <class T, class E>
+    struct expected_assign_base<T,E,true,false> {
+        expected_assign_base() = default;
+        ~expected_assign_base() = default;
+        expected_assign_base(const expected_assign_base&) = default;
+        expected_assign_base(expected_assign_base&&) noexcept = default;
+        expected_assign_base& operator=(const expected_assign_base&) = default;
+        expected_assign_base& operator=(expected_assign_base&&) noexcept = delete;
+    };
+
+    template <class T, class E>
+    struct expected_assign_base<T,E,false,true> {
+        expected_assign_base() = default;
+        ~expected_assign_base() = default;
+        expected_assign_base(const expected_assign_base&) = default;
+        expected_assign_base(expected_assign_base&&) noexcept = default;
+        expected_assign_base& operator=(const expected_assign_base&) = delete;
+        expected_assign_base& operator=(expected_assign_base&&) noexcept = default;
+    };
+
+    template <class T, class E>
+    struct expected_assign_base<T,E,false,false> {
+        expected_assign_base() = default;
+        ~expected_assign_base() = default;
+        expected_assign_base(const expected_assign_base&) = default;
+        expected_assign_base(expected_assign_base&&) noexcept = default;
+        expected_assign_base& operator=(const expected_assign_base&) = delete;
+        expected_assign_base& operator=(expected_assign_base&&) noexcept = delete;
+    };
 } // namespace detail
 
 template <class E> class bad_expected_access : public std::exception {
@@ -419,7 +463,9 @@ private:
 };
 
 template <class T, class E>
-class expected : private detail::expected_storage_base<T, E> {
+class expected : private detail::expected_storage_base<T, E>,
+                 private detail::expected_assign_base<T, E>
+{
   static_assert(!std::is_reference<T>::value, "T must not be a reference");
   static_assert(!std::is_same<T, std::remove_cv<in_place_t>>::value,
                 "T must not be in_place_t");
@@ -814,13 +860,15 @@ public:
     expected& operator=(expected&& rhs) {
         return assign(std::move(rhs));
     }
+
     template <class U = T,
               detail::enable_if_t<
                   (!std::is_same<expected<T,E>, detail::decay_t<U>>::value &&
                    !detail::conjunction<std::is_scalar<T>, std::is_same<T, detail::decay_t<U>>>::value &&
                    std::is_constructible<T, U>::value &&
                    std::is_assignable<T&, U>::value &&
-                   std::is_nothrow_move_constructible<E>::value)>* = nullptr,                 detail::enable_if_t<std::is_nothrow_constructible<T, U&&>::value>* = nullptr>
+                   std::is_nothrow_move_constructible<E>::value)>* = nullptr,
+              detail::enable_if_t<std::is_nothrow_constructible<T, U&&>::value>* = nullptr>
    expected &operator=(U &&v) {
         if (has_value()) {
             val() = std::forward<U>(v);
@@ -864,7 +912,7 @@ public:
 
 
     template <class G = E,
-              detail::enable_if_t<std::is_nothrow_copy_constructible<E>::value && std::is_assignable<E&, E>::value>* = nullptr>
+              detail::enable_if_t<std::is_nothrow_copy_constructible<G>::value && std::is_assignable<G&, G>::value>* = nullptr>
         expected &operator=(const unexpected<G> &rhs) {
         if (!has_value()) {
             err() = rhs;
@@ -879,7 +927,7 @@ public:
     }
 
     template <class G = E,
-              detail::enable_if_t<std::is_nothrow_move_constructible<E>::value && std::is_move_assignable<E>::value>* = nullptr>
+              detail::enable_if_t<std::is_nothrow_move_constructible<G>::value && std::is_move_assignable<G>::value>* = nullptr>
         expected &operator=(unexpected<G> && rhs) noexcept {
         if (!has_value()) {
             err() = std::move(rhs);

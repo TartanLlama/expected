@@ -139,8 +139,8 @@ public:
   constexpr E &value() & { return m_val; }
   /// \group unexpected_value
   constexpr E &&value() && { return std::move(m_val); }
-  /// \group unexpected_value
-  constexpr E const &&value() const && { return std::move(m_val); }
+  /// \exclude
+  constexpr const E &&value() const && { return std::move(m_val); }
 
 private:
   E m_val;
@@ -374,7 +374,8 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 
 // expected_copy_move_base is used to conditionally delete the move/copy
 // constructors/assignment operators depending on the traits of T and E.
-    // TODO these could be reduced a bit by splitting construction and assignment into different bases
+// TODO these could be reduced a bit by splitting construction and assignment
+// into different bases
 template <
     class T, class E,
     bool EnableCopy = (std::is_copy_constructible<T>::value &&
@@ -869,8 +870,7 @@ public:
                   "F must return an expected");
 
     return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
-                       : result(unexpect, std::
-                                    : move(this->error()));
+                       : result(unexpect, std::move(this->error()));
   }
 #endif
 
@@ -937,32 +937,44 @@ public:
     !defined(TL_EXPECTED_GCC54)
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<U>`. The return value is empty if
-  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
+  /// value())`. Returns a `std::expected<U,E>`. If `*this` is unexpected, the
+  /// result is `*this`, otherwise an `expected<U,E>` is constructed from the
   /// return value of `std::invoke(std::forward<F>(f), value())` and is
-  /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
+  /// returned.
+  ///
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) &;
   template <class F> TL_EXPECTED_11_CONSTEXPR auto map(F &&f) & {
     return map_impl(*this, std::forward<F>(f));
   }
 
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F> TL_EXPECTED_11_CONSTEXPR auto map(F &&f) && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
 
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) const &;
   template <class F> constexpr auto map(F &&f) const & {
     return map_impl(*this, std::forward<F>(f));
   }
 
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) const &&;
   template <class F> constexpr auto map(F &&f) const && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
 #else
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<U>`. The return value is empty if
-  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
+  /// value())`. Returns a `std::expected<U,E>`. If `*this` is unexpected, the
+  /// result is `*this`, otherwise an `expected<U,E>` is constructed from the
   /// return value of `std::invoke(std::forward<F>(f), value())` and is
-  /// returned. \group map \synopsis template <class F> auto map(F &&f) &;
+  /// returned.
+  ///
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) &;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(map_impl(std::declval<expected &>(),
                                              std::declval<F &&>()))
@@ -970,13 +982,17 @@ public:
     return map_impl(*this, std::forward<F>(f));
   }
 
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F>
-  TL_EXPECTED_11_CONSTEXPR decltype(map_impl(std::declval<expected &&>(),
+  TL_EXPECTED_11_CONSTEXPR decltype(map_impl(std::declval<expected &>(),
                                              std::declval<F &&>()))
   map(F &&f) && {
     return map_impl(std::move(*this), std::forward<F>(f));
   }
 
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) const &;
   template <class F>
   constexpr decltype(map_impl(std::declval<const expected &>(),
                               std::declval<F &&>()))
@@ -985,6 +1001,8 @@ public:
   }
 
 #ifndef TL_EXPECTED_NO_CONSTRR
+  /// \group map
+  /// \synopsis template <class F> constexpr auto map(F &&f) const &&;
   template <class F>
   constexpr decltype(map_impl(std::declval<const expected &&>(),
                               std::declval<F &&>()))
@@ -996,36 +1014,48 @@ public:
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
     !defined(TL_EXPECTED_GCC54)
-  /// \brief Carries out some operation on the stored object if there is one.
+  /// \brief Carries out some operation on the stored unexpected object if there
+  /// is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<U>`. The return value is empty if
-  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
-  /// return value of `std::invoke(std::forward<F>(f), value())` and is
-  /// returned. \group map_error \synopsis template <class F> auto map_error(F
-  /// &&f) &;
+  /// value())`. Returns a `std::expected<T,U>`. If `*this` has an expected
+  /// value, the result is `*this`, otherwise an `expected<T,U>` is constructed
+  /// from `make_unexpected(std::invoke(std::forward<F>(f), value()))` and is
+  /// returned.
+  ///
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) &;
   template <class F> TL_EXPECTED_11_CONSTEXPR auto map_error(F &&f) & {
     return map_error_impl(*this, std::forward<F>(f));
   }
 
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) &&;
   template <class F> TL_EXPECTED_11_CONSTEXPR auto map_error(F &&f) && {
     return map_error_impl(std::move(*this), std::forward<F>(f));
   }
 
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) const &;
   template <class F> constexpr auto map_error(F &&f) const & {
     return map_error_impl(*this, std::forward<F>(f));
   }
 
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) const &&;
   template <class F> constexpr auto map_error(F &&f) const && {
     return map_error_impl(std::move(*this), std::forward<F>(f));
   }
 #else
-  /// \brief Carries out some operation on the stored object if there is one.
+  /// \brief Carries out some operation on the stored unexpected object if there
+  /// is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<U>`. The return value is empty if
-  /// `*this` is empty, otherwise an `expected<U>` is constructed from the
-  /// return value of `std::invoke(std::forward<F>(f), value())` and is
-  /// returned. \group map_error \synopsis template <class F> auto map_error(F
-  /// &&f) &;
+  /// value())`. Returns a `std::expected<T,U>`. If `*this` has an expected
+  /// value, the result is `*this`, otherwise an `expected<T,U>` is constructed
+  /// from `make_unexpected(std::invoke(std::forward<F>(f), value()))` and is
+  /// returned.
+  ///
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) &;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(map_error_impl(std::declval<expected &>(),
                                                    std::declval<F &&>()))
@@ -1033,6 +1063,8 @@ public:
     return map_error_impl(*this, std::forward<F>(f));
   }
 
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) &&;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(map_error_impl(std::declval<expected &&>(),
                                                    std::declval<F &&>()))
@@ -1040,6 +1072,8 @@ public:
     return map_error_impl(std::move(*this), std::forward<F>(f));
   }
 
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) const &;
   template <class F>
   constexpr decltype(map_error_impl(std::declval<const expected &>(),
                                     std::declval<F &&>()))
@@ -1048,6 +1082,8 @@ public:
   }
 
 #ifndef TL_EXPECTED_NO_CONSTRR
+  /// \group map_error
+  /// \synopsis template <class F> constexpr auto map_error(F &&f) const &&;
   template <class F>
   constexpr decltype(map_error_impl(std::declval<const expected &&>(),
                                     std::declval<F &&>()))
@@ -1077,15 +1113,18 @@ public:
       : impl_base(in_place, il, std::forward<Args>(args)...),
         ctor_base(detail::default_constructor_tag{}) {}
 
+  /// \group unexpected_ctor
+  /// \synopsis EXPLICIT constexpr expected(const unexpected<G> &e);
   template <class G = E,
             detail::enable_if_t<std::is_constructible<E, const G &>::value> * =
                 nullptr,
             detail::enable_if_t<!std::is_convertible<const G &, E>::value> * =
                 nullptr>
-  explicit constexpr expected(unexpected<G> const &e)
+  explicit constexpr expected(const unexpected<G> &e)
       : impl_base(unexpect, e.value()),
         ctor_base(detail::default_constructor_tag{}) {}
 
+  /// \exclude
   template <
       class G = E,
       detail::enable_if_t<std::is_constructible<E, const G &>::value> * =
@@ -1095,6 +1134,8 @@ public:
       : impl_base(unexpect, e.value()),
         ctor_base(detail::default_constructor_tag{}) {}
 
+  /// \group unexpected_ctor
+  /// \synopsis EXPLICIT constexpr expected(unexpected<G> &&e);
   template <
       class G = E,
       detail::enable_if_t<std::is_constructible<E, G &&>::value> * = nullptr,
@@ -1104,6 +1145,7 @@ public:
       : impl_base(unexpect, std::move(e.value())),
         ctor_base(detail::default_constructor_tag{}) {}
 
+  /// \exclude
   template <
       class G = E,
       detail::enable_if_t<std::is_constructible<E, G &&>::value> * = nullptr,
@@ -1120,6 +1162,7 @@ public:
       : impl_base(unexpect, std::forward<Args>(args)...),
         ctor_base(detail::default_constructor_tag{}) {}
 
+  /// \exclude
   template <class U, class... Args,
             detail::enable_if_t<std::is_constructible<
                 E, std::initializer_list<U> &, Args &&...>::value> * = nullptr>
@@ -1130,8 +1173,8 @@ public:
 
   // TODO SFINAE
   template <class U, class G,
-            detail::enable_if_t<(!std::is_convertible<U const &, T>::value ||
-                                 !std::is_convertible<G const &, E>::value)> * =
+            detail::enable_if_t<!(std::is_convertible<U const &, T>::value &&
+                                  std::is_convertible<G const &, E>::value)> * =
                 nullptr>
   explicit constexpr expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
@@ -1143,11 +1186,12 @@ public:
   }
 
   // TODO SFINAE
-  template <
-      class U, class G,
-      detail::enable_if_t<(!std::is_convertible<U &&, T>::value ||
-                           !std::is_convertible<G &&, E>::value)> * = nullptr>
-  explicit constexpr expected(const expected<U, G> &rhs)
+  /// \exclude
+  template <class U, class G,
+            detail::enable_if_t<(std::is_convertible<U const &, T>::value &&
+                                 std::is_convertible<G const &, E>::value)> * =
+                nullptr>
+  constexpr expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(*rhs);
@@ -1159,7 +1203,22 @@ public:
   // TODO SFINAE
   template <
       class U, class G,
-      detail::enable_if_t<(std::is_convertible<U &&, T>::value ||
+      detail::enable_if_t<!(std::is_convertible<U &&, T>::value &&
+                            std::is_convertible<G &&, E>::value)> * = nullptr>
+  explicit constexpr expected(expected<U, G> &&rhs)
+      : ctor_base(detail::default_constructor_tag{}) {
+    if (rhs.has_value()) {
+      ::new (valptr()) T(std::move(*rhs));
+    } else {
+      ::new (errptr()) unexpected_type(unexpected<E>(std::move(rhs.error())));
+    }
+  }
+
+  // TODO SFINAE
+  /// \exclude
+  template <
+      class U, class G,
+      detail::enable_if_t<(std::is_convertible<U &&, T>::value &&
                            std::is_convertible<G &&, E>::value)> * = nullptr>
   constexpr expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
@@ -1176,6 +1235,7 @@ public:
   explicit constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
   // TODO SFINAE
+  /// \exclude
   template <class U = T, detail::enable_if_t<
                              std::is_convertible<U &&, T>::value> * = nullptr>
   constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
@@ -1203,6 +1263,7 @@ public:
     return *this;
   }
 
+  /// \exclude
   template <
       class U = T,
       detail::enable_if_t<
@@ -1274,6 +1335,7 @@ public:
     }
   }
 
+  /// \exclude
   template <class... Args, detail::enable_if_t<!std::is_nothrow_constructible<
                                T, Args &&...>::value> * = nullptr>
   void emplace(Args &&... args) {
@@ -1307,6 +1369,7 @@ public:
     }
   }
 
+  /// \exclude
   template <class U, class... Args,
             detail::enable_if_t<!std::is_nothrow_constructible<
                 T, std::initializer_list<U> &, Args &&...>::value> * = nullptr>
@@ -1397,10 +1460,9 @@ public:
                   "T must be move-constructible and convertible to from U&&");
     return bool(*this) ? std::move(**this) : static_cast<T>(std::forward<U>(v));
   }
-
-private:
 };
 
+/// \exclude
 namespace detail {
 template <class Exp> using err_t = typename detail::decay_t<Exp>::error_type;
 template <class Exp, class Ret> using ret_t = expected<Ret, err_t<Exp>>;

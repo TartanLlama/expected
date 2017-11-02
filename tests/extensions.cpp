@@ -133,8 +133,8 @@ TEST_CASE("Map extensions", "[extensions.map]") {
 }
 
 TEST_CASE("Map error extensions", "[extensions.map_error]") {
-  auto mul2 = [](auto a) { return a * 2; };
-  auto ret_void = [](auto a) {};
+  auto mul2 = [](int a) { return a * 2; };
+  auto ret_void = [](int a) {};
 
   {
     tl::expected<int, int> e = 21;
@@ -194,8 +194,8 @@ TEST_CASE("Map error extensions", "[extensions.map_error]") {
 }
 
 TEST_CASE("And then extensions", "[extensions.and_then]") {
-  auto succeed = [](auto a) { return tl::expected<int, int>(21 * 2); };
-  auto fail = [](auto a) { return tl::expected<int, int>(tl::unexpect, 17); };
+  auto succeed = [](int a) { return tl::expected<int, int>(21 * 2); };
+  auto fail = [](int a) { return tl::expected<int, int>(tl::unexpect, 17); };
 
   {
     tl::expected<int, int> e = 21;

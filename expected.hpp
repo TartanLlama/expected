@@ -152,9 +152,9 @@ public:
   /// \group unexpected_value
   constexpr const E &value() const & { return m_val; }
   /// \group unexpected_value
-  constexpr E &value() & { return m_val; }
+  TL_EXPECTED_11_CONSTEXPR E &value() & { return m_val; }
   /// \group unexpected_value
-  constexpr E &&value() && { return std::move(m_val); }
+  TL_EXPECTED_11_CONSTEXPR E &&value() && { return std::move(m_val); }
   /// \exclude
   constexpr const E &&value() const && { return std::move(m_val); }
 
@@ -521,14 +521,14 @@ struct expected_operations_base : expected_storage_base<T, E> {
   bool has_value() const { return this->m_has_value; }
 
   TL_EXPECTED_11_CONSTEXPR T &get() & { return this->m_val; }
-  TL_EXPECTED_11_CONSTEXPR const T &get() const & { return this->m_val; }
+  constexpr const T &get() const & { return this->m_val; }
   TL_EXPECTED_11_CONSTEXPR T &&get() && { std::move(this->m_val); }
 #ifndef TL_EXPECTED_NO_CONSTRR
   constexpr const T &&get() const && { return std::move(this->m_val); }
 #endif
 
   TL_EXPECTED_11_CONSTEXPR T &geterr() & { return this->m_unexpect; }
-  TL_EXPECTED_11_CONSTEXPR const T &geterr() const & {
+  constexpr const T &geterr() const & {
     return this->m_unexpect;
   }
   TL_EXPECTED_11_CONSTEXPR T &&geterr() && { std::move(this->m_unexpect); }

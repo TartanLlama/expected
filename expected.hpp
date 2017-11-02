@@ -396,18 +396,18 @@ struct expected_operations_base : expected_storage_base<T, E> {
 
   void hard_reset() noexcept {
     get().~T();
-    this->m_has_value = false;
+    this->m_has_val = false;
   }
 
   template <class... Args> void construct(Args &&... args) noexcept {
     new (std::addressof(this->m_val)) T(std::forward<Args>(args)...);
-    this->m_has_value = true;
+    this->m_has_val = true;
   }
 
   template <class... Args> void construct_error(Args &&... args) noexcept {
     new (std::addressof(this->m_unexpect))
         unexpected<E>(std::forward<Args>(args)...);
-    this->m_has_value = false;
+    this->m_has_val = false;
   }
 
   // These assign overloads ensure that the most efficient assignment
@@ -518,7 +518,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
     }
   }
 
-  bool has_value() const { return this->m_has_value; }
+  bool has_value() const { return this->m_has_val; }
 
   TL_EXPECTED_11_CONSTEXPR T &get() & { return this->m_val; }
   constexpr const T &get() const & { return this->m_val; }
@@ -528,9 +528,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
 #endif
 
   TL_EXPECTED_11_CONSTEXPR T &geterr() & { return this->m_unexpect; }
-  constexpr const T &geterr() const & {
-    return this->m_unexpect;
-  }
+  constexpr const T &geterr() const & { return this->m_unexpect; }
   TL_EXPECTED_11_CONSTEXPR T &&geterr() && { std::move(this->m_unexpect); }
 #ifndef TL_EXPECTED_NO_CONSTRR
   constexpr const T &&geterr() const && { return std::move(this->m_unexpect); }

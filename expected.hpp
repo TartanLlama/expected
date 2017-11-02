@@ -419,8 +419,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   template <class U = T,
             detail::enable_if_t<std::is_nothrow_copy_constructible<U>::value>
                 * = nullptr>
-  void
-  assign(const expected_operations_base &rhs) noexcept {
+  void assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
       geterr().~unexpected<E>();
       construct(rhs.get());
@@ -435,8 +434,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
             detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
                                 std::is_nothrow_move_constructible<U>::value>
                 * = nullptr>
-  void
-  assign(const expected_operations_base &rhs) noexcept {
+  void assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
       T tmp = rhs.get();
       geterr().~unexpected<E>();
@@ -1143,8 +1141,8 @@ public:
   constexpr expected() = default;
   constexpr expected(const expected &rhs) = default;
   constexpr expected(expected &&rhs) = default;
-  constexpr expected &operator=(const expected &rhs) = default;
-  constexpr expected &operator=(expected &&rhs) = default;
+     expected &operator=(const expected &rhs) = default;
+   expected &operator=(expected &&rhs) = default;
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -1223,7 +1221,7 @@ public:
             detail::enable_if_t<!(std::is_convertible<U const &, T>::value &&
                                   std::is_convertible<G const &, E>::value)> * =
                 nullptr>
-  explicit constexpr expected(const expected<U, G> &rhs)
+  explicit TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(*rhs);
@@ -1238,7 +1236,7 @@ public:
             detail::enable_if_t<(std::is_convertible<U const &, T>::value &&
                                  std::is_convertible<G const &, E>::value)> * =
                 nullptr>
-  constexpr expected(const expected<U, G> &rhs)
+  TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(*rhs);
@@ -1252,7 +1250,7 @@ public:
       class U, class G,
       detail::enable_if_t<!(std::is_convertible<U &&, T>::value &&
                             std::is_convertible<G &&, E>::value)> * = nullptr>
-  explicit constexpr expected(expected<U, G> &&rhs)
+  explicit TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(std::move(*rhs));
@@ -1267,7 +1265,7 @@ public:
       class U, class G,
       detail::enable_if_t<(std::is_convertible<U &&, T>::value &&
                            std::is_convertible<G &&, E>::value)> * = nullptr>
-  constexpr expected(expected<U, G> &&rhs)
+  TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(std::move(*rhs));
@@ -1464,11 +1462,11 @@ public:
   }
 
   constexpr const T *operator->() const { return valptr(); }
-  constexpr T *operator->() { return valptr(); }
+  TL_EXPECTED_11_CONSTEXPR T *operator->() { return valptr(); }
   constexpr const T &operator*() const & { return val(); }
-  constexpr T &operator*() & { return val(); }
+  TL_EXPECTED_11_CONSTEXPR T &operator*() & { return val(); }
   constexpr const T &&operator*() const && { return std::move(val()); }
-  constexpr T &&operator*() && { return std::move(val()); }
+  TL_EXPECTED_11_CONSTEXPR T &&operator*() && { return std::move(val()); }
   constexpr explicit operator bool() const noexcept { return this->m_has_val; }
   constexpr bool has_value() const noexcept { return this->m_has_val; }
   constexpr const T &value() const & {
@@ -1476,7 +1474,7 @@ public:
       throw bad_expected_access<E>(err());
     return val();
   }
-  constexpr T &value() & {
+  TL_EXPECTED_11_CONSTEXPR T &value() & {
     if (!has_value())
       throw bad_expected_access<E>(err());
     return val();
@@ -1486,22 +1484,22 @@ public:
       throw bad_expected_access<E>(err());
     return std::move(val());
   }
-  constexpr T &&value() && {
+  TL_EXPECTED_11_CONSTEXPR T &&value() && {
     if (!has_value())
       throw bad_expected_access<E>(err());
     return std::move(val());
   }
   constexpr const E &error() const & { return err().value(); }
-  constexpr E &error() & { return err().value(); }
+  TL_EXPECTED_11_CONSTEXPR E &error() & { return err().value(); }
   constexpr const E &&error() const && { return std::move(err().value()); }
-  constexpr E &&error() && { return std::move(err().value()); }
+  TL_EXPECTED_11_CONSTEXPR E &&error() && { return std::move(err().value()); }
   template <class U> constexpr T value_or(U &&v) const & {
     static_assert(std::is_copy_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be copy-constructible and convertible to from U&&");
     return bool(*this) ? **this : static_cast<T>(std::forward<U>(v));
   }
-  template <class U> T value_or(U &&v) && {
+  template <class U> TL_EXPECTED_11_CONSTEXPR T value_or(U &&v) && {
     static_assert(std::is_move_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be move-constructible and convertible to from U&&");

@@ -32,19 +32,23 @@
 #define TL_EXPECTED_GCC54
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 && !defined(__clang__))
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
+     !defined(__clang__))
 // GCC < 5 doesn't support overloading on const&& for member functions
 #define TL_EXPECTED_NO_CONSTRR
 
-//GCC < 5 doesn't support some standard C++11 type traits
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::has_trivial_copy_constructor<T>::value
+// GCC < 5 doesn't support some standard C++11 type traits
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+  std::has_trivial_copy_constructor<T>::value
 #define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
 
 // This one will be different for GCC 5.7 if it's ever supported
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #else
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::is_trivially_copy_constructible<T>::value
-#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::is_trivially_copy_assignable<T>::value
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+  std::is_trivially_copy_constructible<T>::value
+#define IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
+  std::is_trivially_copy_assignable<T>::value
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #endif
 
@@ -384,9 +388,11 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   };
 };
 
-// This base class provides some handy member functions which can be used in further derived classes
-    template <class T, class E> struct expected_operations_base : expected_storage_base<T,E> {
-        using expected_storage_base<T,E>::expected_storage_base;
+// This base class provides some handy member functions which can be used in
+// further derived classes
+template <class T, class E>
+struct expected_operations_base : expected_storage_base<T, E> {
+  using expected_storage_base<T, E>::expected_storage_base;
 
   void hard_reset() noexcept {
     get().~T();
@@ -399,7 +405,8 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   }
 
   template <class... Args> void construct_error(Args &&... args) noexcept {
-      new (std::addressof(this->m_unexpect)) unexpected<E>(std::forward<Args>(args)...);
+    new (std::addressof(this->m_unexpect))
+        unexpected<E>(std::forward<Args>(args)...);
     this->m_has_value = false;
   }
 
@@ -412,13 +419,13 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   template <class U = T,
             detail::enable_if_t<std::is_nothrow_copy_constructible<U>::value>
                 * = nullptr>
-  expected_operations_base &assign(const expected_operations_base &rhs) noexcept {
+  expected_operations_base &
+  assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
       geterr().~unexpected<E>();
       construct(rhs.get());
-    }
-    else {
-        assign_common(rhs);
+    } else {
+      assign_common(rhs);
     }
   }
 
@@ -428,14 +435,14 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
             detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
                                 std::is_nothrow_move_constructible<U>::value>
                 * = nullptr>
-  expected_operations_base &assign(const expected_operations_base &rhs) noexcept {
+  expected_operations_base &
+  assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
-        T tmp = rhs.get();
+      T tmp = rhs.get();
       geterr().~unexpected<E>();
-        construct(std::move(tmp));
-    }
-    else {
-        assign_common(rhs);
+      construct(std::move(tmp));
+    } else {
+      assign_common(rhs);
     }
   }
 
@@ -454,14 +461,13 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
       geterr().~unexpected<E>();
 
       try {
-          construct(rhs.get());
+        construct(rhs.get());
       } catch (...) {
-          geterr() = std::move(tmp);
+        geterr() = std::move(tmp);
         throw;
       }
-    }
-    else {
-        assign_common(rhs);
+    } else {
+      assign_common(rhs);
     }
   }
 
@@ -471,12 +477,10 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
                 * = nullptr>
   expected_operations_base &assign(expected_operations_base &&rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
-        geterr().~unexpected<E>();
-      ::new (valptr()) T(*std::move(rhs));
-      this->m_has_val = true;
-    }
-    else {
-        assign_common(rhs);
+      geterr().~unexpected<E>();
+      construct(std::move(rhs).get());
+    } else {
+      assign_common(rhs);
     }
   }
 
@@ -488,14 +492,13 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
       auto tmp = std::move(geterr());
       geterr().~unexpected<E>();
       try {
-          construct(std::move(rhs).get());
+        construct(std::move(rhs).get());
       } catch (...) {
-          geterr() = std::move(tmp);
+        geterr() = std::move(tmp);
         throw;
       }
-    }
-    else {
-        assign_common(rhs);
+    } else {
+      assign_common(rhs);
     }
   }
 
@@ -503,19 +506,19 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   template <class Rhs> void assign_common(Rhs &&rhs) {
     if (this->m_has_val) {
       if (rhs.m_has_val) {
-          get() = std::forward<Rhs>(rhs).get();
+        get() = std::forward<Rhs>(rhs).get();
       } else {
         get().~T();
         construct_err(std::forward<Rhs>(rhs).geterr());
       }
     } else {
       if (!rhs.m_has_val) {
-          geterr() = std::forward<Rhs>(rhs).geterr();
+        geterr() = std::forward<Rhs>(rhs).geterr();
       }
     }
   }
 
-    bool has_value() const { return this->m_has_value; }
+  bool has_value() const { return this->m_has_value; }
 
   TL_EXPECTED_11_CONSTEXPR T &get() & { return this->m_val; }
   TL_EXPECTED_11_CONSTEXPR const T &get() const & { return this->m_val; }
@@ -525,7 +528,9 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 #endif
 
   TL_EXPECTED_11_CONSTEXPR T &geterr() & { return this->m_unexpect; }
-  TL_EXPECTED_11_CONSTEXPR const T &geterr() const & { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR const T &geterr() const & {
+    return this->m_unexpect;
+  }
   TL_EXPECTED_11_CONSTEXPR T &&geterr() && { std::move(this->m_unexpect); }
 #ifndef TL_EXPECTED_NO_CONSTRR
   constexpr const T &&geterr() const && { return std::move(this->m_unexpect); }
@@ -534,22 +539,22 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 
 // This class manages conditionally having a trivial copy constructor
 // This specialization is for when T is trivially copy constructible
- template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
-    struct expected_copy_base : expected_operations_base<T, E> {
-     using expected_operations_base<T,E>::expected_operations_base;
+template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
+struct expected_copy_base : expected_operations_base<T, E> {
+  using expected_operations_base<T, E>::expected_operations_base;
 };
 
 // This specialization is for when T is not trivially copy constructible
-    template <class T, class E>
-    struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
-        using expected_operations_base<T,E>::expected_operations_base;
+template <class T, class E>
+struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
+  using expected_operations_base<T, E>::expected_operations_base;
 
   expected_copy_base() = default;
   expected_copy_base(const expected_copy_base &rhs) {
     if (rhs.has_value()) {
       this->construct(rhs.get());
     } else {
-        this->construct_error(rhs.geterr());
+      this->construct_error(rhs.geterr());
     }
   }
 
@@ -559,18 +564,22 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 };
 
 // This class manages conditionally having a trivial move constructor
-// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it doesn't implement an analogue to std::is_trivially_move_constructible. We have to make do with a non-trivial move constructor even if T is trivially move constructible
+// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it
+// doesn't implement an analogue to std::is_trivially_move_constructible. We
+// have to make do with a non-trivial move constructor even if T is trivially
+// move constructible
 #ifndef TL_EXPECTED_GCC49
-    template <class T, class E, bool = std::is_trivially_move_constructible<T>::value>
-    struct expected_move_base : expected_copy_base<T,E> {
-        using expected_copy_base<T,E>::expected_copy_base;
+template <class T, class E,
+          bool = std::is_trivially_move_constructible<T>::value>
+struct expected_move_base : expected_copy_base<T, E> {
+  using expected_copy_base<T, E>::expected_copy_base;
 };
 #else
-    template <class T, class E, bool = false>
-    struct expected_move_base;
-    #endif
-    template <class T, class E> struct expected_move_base<T, E, false> : expected_copy_base<T,E> {
-        using expected_copy_base<T,E>::expected_copy_base;
+template <class T, class E, bool = false> struct expected_move_base;
+#endif
+template <class T, class E>
+struct expected_move_base<T, E, false> : expected_copy_base<T, E> {
+  using expected_copy_base<T, E>::expected_copy_base;
 
   expected_move_base() = default;
   expected_move_base(const expected_move_base &rhs) = default;
@@ -588,42 +597,50 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 };
 
 // This class manages conditionally having a trivial copy assignment operator
-    template <class T, class E, bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) && IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) && IS_TRIVIALLY_DESTRUCTIBLE(T)>
-        struct expected_copy_assign_base : expected_move_base<T,E> {
-            using expected_move_base<T,E>::expected_move_base;
+template <class T, class E,
+          bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) &&
+                 IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) &&
+                 IS_TRIVIALLY_DESTRUCTIBLE(T)>
+struct expected_copy_assign_base : expected_move_base<T, E> {
+  using expected_move_base<T, E>::expected_move_base;
 };
 
-    template <class T, class E>
-    struct expected_copy_assign_base<T, E, false> : expected_move_base<T,E> {
-        using expected_move_base<T,E>::expected_move_base;
+template <class T, class E>
+struct expected_copy_assign_base<T, E, false> : expected_move_base<T, E> {
+  using expected_move_base<T, E>::expected_move_base;
 
   expected_copy_assign_base() = default;
   expected_copy_assign_base(const expected_copy_assign_base &rhs) = default;
 
   expected_copy_assign_base(expected_copy_assign_base &&rhs) = default;
   expected_copy_assign_base &operator=(const expected_copy_assign_base &rhs) {
-      this->assign(rhs);
+    this->assign(rhs);
   }
   expected_copy_assign_base &
   operator=(expected_copy_assign_base &&rhs) = default;
 };
 
-
 // This class manages conditionally having a trivial move assignment operator
-// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it doesn't implement an analogue to std::is_trivially_move_assignable. We have to make do with a non-trivial move assignment operator even if T is trivially move assignable
+// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it
+// doesn't implement an analogue to std::is_trivially_move_assignable. We have
+// to make do with a non-trivial move assignment operator even if T is trivially
+// move assignable
 #ifndef TL_EXPECTED_GCC49
-    template <class T, class E, bool = std::is_trivially_destructible<T>::value && std::is_trivially_move_constructible<T>::value && std::is_trivially_move_assignable<T>::value>
-        struct expected_move_assign_base : expected_copy_assign_base<T,E> {
-            using expected_copy_assign_base<T,E>::expected_copy_assign_base;
+template <class T, class E,
+          bool = std::is_trivially_destructible<T>::value
+              &&std::is_trivially_move_constructible<T>::value
+                  &&std::is_trivially_move_assignable<T>::value>
+struct expected_move_assign_base : expected_copy_assign_base<T, E> {
+  using expected_copy_assign_base<T, E>::expected_copy_assign_base;
 };
 #else
-    template <class T, class E, bool = false>
-    struct expected_move_assign_base;
+template <class T, class E, bool = false> struct expected_move_assign_base;
 #endif
 
-    template <class T, class E>
-    struct expected_move_assign_base<T, E, false> : expected_copy_assign_base<T,E> {
-        using expected_copy_assign_base<T,E>::expected_copy_assign_base;
+template <class T, class E>
+struct expected_move_assign_base<T, E, false>
+    : expected_copy_assign_base<T, E> {
+  using expected_copy_assign_base<T, E>::expected_copy_assign_base;
 
   expected_move_assign_base() = default;
   expected_move_assign_base(const expected_move_assign_base &rhs) = default;
@@ -633,15 +650,19 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   operator=(const expected_move_assign_base &rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {
-      this->assign(std::move(rhs));
+    this->assign(std::move(rhs));
   }
   expected_move_assign_base &
   operator=(expected_move_assign_base &&rhs) = default;
 };
 
-// expected_delete_ctor_base will conditionally delete copy and move constructors depending on whether T is copy/move constructible
-    template <class T, bool EnableCopy = (std::is_copy_constructible<T>::value && std::is_copy_constructible<E>::value),
-              bool EnableMove = (std::is_move_constructible<T>::value && std::is_move_constructible<T>::value)>
+// expected_delete_ctor_base will conditionally delete copy and move
+// constructors depending on whether T is copy/move constructible
+template <class T, class E,
+          bool EnableCopy = (std::is_copy_constructible<T>::value &&
+                             std::is_copy_constructible<E>::value),
+          bool EnableMove = (std::is_move_constructible<T>::value &&
+                             std::is_move_constructible<T>::value)>
 struct expected_delete_ctor_base {
   expected_delete_ctor_base() = default;
   expected_delete_ctor_base(const expected_delete_ctor_base &) = default;
@@ -652,7 +673,8 @@ struct expected_delete_ctor_base {
   operator=(expected_delete_ctor_base &&) noexcept = default;
 };
 
-template <class T> struct expected_delete_ctor_base<T, true, false> {
+template <class T, class E>
+struct expected_delete_ctor_base<T, E, true, false> {
   expected_delete_ctor_base() = default;
   expected_delete_ctor_base(const expected_delete_ctor_base &) = default;
   expected_delete_ctor_base(expected_delete_ctor_base &&) noexcept = delete;
@@ -662,7 +684,8 @@ template <class T> struct expected_delete_ctor_base<T, true, false> {
   operator=(expected_delete_ctor_base &&) noexcept = default;
 };
 
-template <class T> struct expected_delete_ctor_base<T, false, true> {
+template <class T, class E>
+struct expected_delete_ctor_base<T, E, false, true> {
   expected_delete_ctor_base() = default;
   expected_delete_ctor_base(const expected_delete_ctor_base &) = delete;
   expected_delete_ctor_base(expected_delete_ctor_base &&) noexcept = default;
@@ -672,7 +695,8 @@ template <class T> struct expected_delete_ctor_base<T, false, true> {
   operator=(expected_delete_ctor_base &&) noexcept = default;
 };
 
-template <class T> struct expected_delete_ctor_base<T, false, false> {
+template <class T, class E>
+struct expected_delete_ctor_base<T, E, false, false> {
   expected_delete_ctor_base() = default;
   expected_delete_ctor_base(const expected_delete_ctor_base &) = delete;
   expected_delete_ctor_base(expected_delete_ctor_base &&) noexcept = delete;
@@ -682,8 +706,10 @@ template <class T> struct expected_delete_ctor_base<T, false, false> {
   operator=(expected_delete_ctor_base &&) noexcept = default;
 };
 
-// expected_delete_assign_base will conditionally delete copy and move constructors depending on whether T is copy/move constructible + assignable
-template <class T,
+// expected_delete_assign_base will conditionally delete copy and move
+// constructors depending on whether T and E are copy/move constructible +
+// assignable
+template <class T, class E,
           bool EnableCopy = (std::is_copy_constructible<T>::value &&
                              std::is_copy_constructible<E>::value &&
                              std::is_copy_assignable<T>::value &&
@@ -703,7 +729,8 @@ struct expected_delete_assign_base {
   operator=(expected_delete_assign_base &&) noexcept = default;
 };
 
-template <class T> struct expected_delete_assign_base<T, true, false> {
+template <class T, class E>
+struct expected_delete_assign_base<T, E, true, false> {
   expected_delete_assign_base() = default;
   expected_delete_assign_base(const expected_delete_assign_base &) = default;
   expected_delete_assign_base(expected_delete_assign_base &&) noexcept =
@@ -714,7 +741,8 @@ template <class T> struct expected_delete_assign_base<T, true, false> {
   operator=(expected_delete_assign_base &&) noexcept = delete;
 };
 
-template <class T> struct expected_delete_assign_base<T, false, true> {
+template <class T, class E>
+struct expected_delete_assign_base<T, E, false, true> {
   expected_delete_assign_base() = default;
   expected_delete_assign_base(const expected_delete_assign_base &) = default;
   expected_delete_assign_base(expected_delete_assign_base &&) noexcept =
@@ -725,7 +753,8 @@ template <class T> struct expected_delete_assign_base<T, false, true> {
   operator=(expected_delete_assign_base &&) noexcept = default;
 };
 
-template <class T> struct expected_delete_assign_base<T, false, false> {
+template <class T, class E>
+struct expected_delete_assign_base<T, E, false, false> {
   expected_delete_assign_base() = default;
   expected_delete_assign_base(const expected_delete_assign_base &) = default;
   expected_delete_assign_base(expected_delete_assign_base &&) noexcept =
@@ -802,7 +831,7 @@ private:
 /// has been destroyed. The initialization state of the contained object is
 /// tracked by the expected object.
 template <class T, class E>
-class expected : private detail::expected_move_assign<T, E>,
+class expected : private detail::expected_move_assign_base<T, E>,
                  private detail::expected_delete_ctor_base<T, E>,
                  private detail::expected_delete_assign_base<T, E>,
                  private detail::expected_default_ctor_base<T, E> {
@@ -823,7 +852,7 @@ class expected : private detail::expected_move_assign<T, E>,
   const T &val() const { return this->m_val; }
   const unexpected<E> &err() const { return this->m_unexpect; }
 
-  using impl_base = detail::expected_impl<T, E>;
+  using impl_base = detail::expected_move_assign_base<T, E>;
   using ctor_base = detail::expected_default_ctor_base<T, E>;
 
 public:

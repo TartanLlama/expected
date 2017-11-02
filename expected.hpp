@@ -419,7 +419,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   template <class U = T,
             detail::enable_if_t<std::is_nothrow_copy_constructible<U>::value>
                 * = nullptr>
-  expected_operations_base &
+  void
   assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
       geterr().~unexpected<E>();
@@ -435,7 +435,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
             detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
                                 std::is_nothrow_move_constructible<U>::value>
                 * = nullptr>
-  expected_operations_base &
+  void
   assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
       T tmp = rhs.get();
@@ -455,7 +455,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
             detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
                                 !std::is_nothrow_move_constructible<U>::value>
                 * = nullptr>
-  expected_operations_base &assign(const expected_operations_base &rhs) {
+  void assign(const expected_operations_base &rhs) {
     if (!this->m_has_val && rhs.m_has_val) {
       auto tmp = std::move(geterr());
       geterr().~unexpected<E>();
@@ -475,7 +475,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   template <class U = T,
             detail::enable_if_t<std::is_nothrow_move_constructible<U>::value>
                 * = nullptr>
-  expected_operations_base &assign(expected_operations_base &&rhs) noexcept {
+  void assign(expected_operations_base &&rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
       geterr().~unexpected<E>();
       construct(std::move(rhs).get());
@@ -487,7 +487,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   template <class U = T,
             detail::enable_if_t<!std::is_nothrow_move_constructible<U>::value>
                 * = nullptr>
-  expected_operations_base &assign(expected_operations_base &&rhs) {
+  void assign(expected_operations_base &&rhs) {
     if (!this->m_has_val && rhs.m_has_val) {
       auto tmp = std::move(geterr());
       geterr().~unexpected<E>();
@@ -509,7 +509,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
         get() = std::forward<Rhs>(rhs).get();
       } else {
         get().~T();
-        construct_err(std::forward<Rhs>(rhs).geterr());
+        construct_error(std::forward<Rhs>(rhs).geterr());
       }
     } else {
       if (!rhs.m_has_val) {
@@ -527,11 +527,17 @@ struct expected_operations_base : expected_storage_base<T, E> {
   constexpr const T &&get() const && { return std::move(this->m_val); }
 #endif
 
-    TL_EXPECTED_11_CONSTEXPR unexpected<E> &geterr() & { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR unexpected<E> &geterr() & {
+    return this->m_unexpect;
+  }
   constexpr const unexpected<E> &geterr() const & { return this->m_unexpect; }
-  TL_EXPECTED_11_CONSTEXPR unexpected<E> &&geterr() && { std::move(this->m_unexpect); }
+  TL_EXPECTED_11_CONSTEXPR unexpected<E> &&geterr() && {
+    std::move(this->m_unexpect);
+  }
 #ifndef TL_EXPECTED_NO_CONSTRR
-  constexpr const unexpected<E> &&geterr() const && { return std::move(this->m_unexpect); }
+  constexpr const unexpected<E> &&geterr() const && {
+    return std::move(this->m_unexpect);
+  }
 #endif
 };
 
@@ -613,6 +619,7 @@ struct expected_copy_assign_base<T, E, false> : expected_move_base<T, E> {
   expected_copy_assign_base(expected_copy_assign_base &&rhs) = default;
   expected_copy_assign_base &operator=(const expected_copy_assign_base &rhs) {
     this->assign(rhs);
+    return *this;
   }
   expected_copy_assign_base &
   operator=(expected_copy_assign_base &&rhs) = default;
@@ -649,6 +656,7 @@ struct expected_move_assign_base<T, E, false>
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {
     this->assign(std::move(rhs));
+    return *this;
   }
   expected_move_assign_base &
   operator=(expected_move_assign_base &&rhs) = default;

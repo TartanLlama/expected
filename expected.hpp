@@ -32,8 +32,20 @@
 #define TL_EXPECTED_GCC54
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 && !defined(__clang__))
+// GCC < 5 doesn't support overloading on const&& for member functions
 #define TL_EXPECTED_NO_CONSTRR
+
+//GCC < 5 doesn't support some standard C++11 type traits
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::has_trivial_copy_constructor<T>::value
+#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
+
+// This one will be different for GCC 5.7 if it's ever supported
+#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
+#else
+#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) std::is_trivially_copy_constructible<T>::value
+#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::is_trivially_copy_assignable<T>::value
+#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #endif
 
 #if __cplusplus > 201103L
@@ -372,190 +384,356 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   };
 };
 
-// expected_copy_move_base is used to conditionally delete the move/copy
-// constructors/assignment operators depending on the traits of T and E.
-// TODO these could be reduced a bit by splitting construction and assignment
-// into different bases
-template <
-    class T, class E,
-    bool EnableCopy = (std::is_copy_constructible<T>::value &&
-                       std::is_copy_constructible<E>::value),
-    bool EnableMove = (std::is_move_constructible<T>::value &&
-                       std::is_move_constructible<E>::value),
-    bool EnableCopyAssign = (std::is_copy_assignable<T>::value &&
-                             std::is_copy_assignable<E>::value &&
+// This base class provides some handy member functions which can be used in further derived classes
+    template <class T, class E> struct expected_operations_base : expected_storage_base<T,E> {
+        using expected_storage_base<T,E>::expected_storage_base;
+
+  void hard_reset() noexcept {
+    get().~T();
+    this->m_has_value = false;
+  }
+
+  template <class... Args> void construct(Args &&... args) noexcept {
+    new (std::addressof(this->m_val)) T(std::forward<Args>(args)...);
+    this->m_has_value = true;
+  }
+
+  template <class... Args> void construct_error(Args &&... args) noexcept {
+      new (std::addressof(this->m_unexpect)) unexpected<E>(std::forward<Args>(args)...);
+    this->m_has_value = false;
+  }
+
+  // These assign overloads ensure that the most efficient assignment
+  // implementation is used while maintaining the strong exception guarantee.
+  // The problematic case is where rhs has a value, but *this does not.
+  //
+  // This overload handles the case where we can just copy-construct `T`
+  // directly into place without throwing.
+  template <class U = T,
+            detail::enable_if_t<std::is_nothrow_copy_constructible<U>::value>
+                * = nullptr>
+  expected_operations_base &assign(const expected_operations_base &rhs) noexcept {
+    if (!this->m_has_val && rhs.m_has_val) {
+      geterr().~unexpected<E>();
+      construct(rhs.get());
+    }
+    else {
+        assign_common(rhs);
+    }
+  }
+
+  // This overload handles the case where we can attempt to create a copy of
+  // `T`, then no-throw move it into place if the copy was successful.
+  template <class U = T,
+            detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
+                                std::is_nothrow_move_constructible<U>::value>
+                * = nullptr>
+  expected_operations_base &assign(const expected_operations_base &rhs) noexcept {
+    if (!this->m_has_val && rhs.m_has_val) {
+        T tmp = rhs.get();
+      geterr().~unexpected<E>();
+        construct(std::move(tmp));
+    }
+    else {
+        assign_common(rhs);
+    }
+  }
+
+  // This overload is the worst-case, where we have to move-construct the
+  // unexpected value into temporary storage, then try to copy the T into place.
+  // If the construction succeeds, then everything is fine, but if it throws,
+  // then we move the old unexpected value back into place before rethrowing the
+  // exception.
+  template <class U = T,
+            detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
+                                !std::is_nothrow_move_constructible<U>::value>
+                * = nullptr>
+  expected_operations_base &assign(const expected_operations_base &rhs) {
+    if (!this->m_has_val && rhs.m_has_val) {
+      auto tmp = std::move(geterr());
+      geterr().~unexpected<E>();
+
+      try {
+          construct(rhs.get());
+      } catch (...) {
+          geterr() = std::move(tmp);
+        throw;
+      }
+    }
+    else {
+        assign_common(rhs);
+    }
+  }
+
+  // These overloads do the same as above, but for rvalues
+  template <class U = T,
+            detail::enable_if_t<std::is_nothrow_move_constructible<U>::value>
+                * = nullptr>
+  expected_operations_base &assign(expected_operations_base &&rhs) noexcept {
+    if (!this->m_has_val && rhs.m_has_val) {
+        geterr().~unexpected<E>();
+      ::new (valptr()) T(*std::move(rhs));
+      this->m_has_val = true;
+    }
+    else {
+        assign_common(rhs);
+    }
+  }
+
+  template <class U = T,
+            detail::enable_if_t<!std::is_nothrow_move_constructible<U>::value>
+                * = nullptr>
+  expected_operations_base &assign(expected_operations_base &&rhs) {
+    if (!this->m_has_val && rhs.m_has_val) {
+      auto tmp = std::move(geterr());
+      geterr().~unexpected<E>();
+      try {
+          construct(std::move(rhs).get());
+      } catch (...) {
+          geterr() = std::move(tmp);
+        throw;
+      }
+    }
+    else {
+        assign_common(rhs);
+    }
+  }
+
+  // The common part of move/copy assigning
+  template <class Rhs> void assign_common(Rhs &&rhs) {
+    if (this->m_has_val) {
+      if (rhs.m_has_val) {
+          get() = std::forward<Rhs>(rhs).get();
+      } else {
+        get().~T();
+        construct_err(std::forward<Rhs>(rhs).geterr());
+      }
+    } else {
+      if (!rhs.m_has_val) {
+          geterr() = std::forward<Rhs>(rhs).geterr();
+      }
+    }
+  }
+
+    bool has_value() const { return this->m_has_value; }
+
+  TL_EXPECTED_11_CONSTEXPR T &get() & { return this->m_val; }
+  TL_EXPECTED_11_CONSTEXPR const T &get() const & { return this->m_val; }
+  TL_EXPECTED_11_CONSTEXPR T &&get() && { std::move(this->m_val); }
+#ifndef TL_EXPECTED_NO_CONSTRR
+  constexpr const T &&get() const && { return std::move(this->m_val); }
+#endif
+
+  TL_EXPECTED_11_CONSTEXPR T &geterr() & { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR const T &geterr() const & { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR T &&geterr() && { std::move(this->m_unexpect); }
+#ifndef TL_EXPECTED_NO_CONSTRR
+  constexpr const T &&geterr() const && { return std::move(this->m_unexpect); }
+#endif
+};
+
+// This class manages conditionally having a trivial copy constructor
+// This specialization is for when T is trivially copy constructible
+ template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
+    struct expected_copy_base : expected_operations_base<T, E> {
+     using expected_operations_base<T,E>::expected_operations_base;
+};
+
+// This specialization is for when T is not trivially copy constructible
+    template <class T, class E>
+    struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
+        using expected_operations_base<T,E>::expected_operations_base;
+
+  expected_copy_base() = default;
+  expected_copy_base(const expected_copy_base &rhs) {
+    if (rhs.has_value()) {
+      this->construct(rhs.get());
+    } else {
+        this->construct_error(rhs.geterr());
+    }
+  }
+
+  expected_copy_base(expected_copy_base &&rhs) = default;
+  expected_copy_base &operator=(const expected_copy_base &rhs) = default;
+  expected_copy_base &operator=(expected_copy_base &&rhs) = default;
+};
+
+// This class manages conditionally having a trivial move constructor
+// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it doesn't implement an analogue to std::is_trivially_move_constructible. We have to make do with a non-trivial move constructor even if T is trivially move constructible
+#ifndef TL_EXPECTED_GCC49
+    template <class T, class E, bool = std::is_trivially_move_constructible<T>::value>
+    struct expected_move_base : expected_copy_base<T,E> {
+        using expected_copy_base<T,E>::expected_copy_base;
+};
+#else
+    template <class T, class E, bool = false>
+    struct expected_move_base;
+    #endif
+    template <class T, class E> struct expected_move_base<T, E, false> : expected_copy_base<T,E> {
+        using expected_copy_base<T,E>::expected_copy_base;
+
+  expected_move_base() = default;
+  expected_move_base(const expected_move_base &rhs) = default;
+
+  expected_move_base(expected_move_base &&rhs) noexcept(
+      std::is_nothrow_move_constructible<T>::value) {
+    if (rhs.has_value()) {
+      this->construct(std::move(rhs.get()));
+    } else {
+      this->construct_error(std::move(rhs.geterr()));
+    }
+  }
+  expected_move_base &operator=(const expected_move_base &rhs) = default;
+  expected_move_base &operator=(expected_move_base &&rhs) = default;
+};
+
+// This class manages conditionally having a trivial copy assignment operator
+    template <class T, class E, bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) && IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) && IS_TRIVIALLY_DESTRUCTIBLE(T)>
+        struct expected_copy_assign_base : expected_move_base<T,E> {
+            using expected_move_base<T,E>::expected_move_base;
+};
+
+    template <class T, class E>
+    struct expected_copy_assign_base<T, E, false> : expected_move_base<T,E> {
+        using expected_move_base<T,E>::expected_move_base;
+
+  expected_copy_assign_base() = default;
+  expected_copy_assign_base(const expected_copy_assign_base &rhs) = default;
+
+  expected_copy_assign_base(expected_copy_assign_base &&rhs) = default;
+  expected_copy_assign_base &operator=(const expected_copy_assign_base &rhs) {
+      this->assign(rhs);
+  }
+  expected_copy_assign_base &
+  operator=(expected_copy_assign_base &&rhs) = default;
+};
+
+
+// This class manages conditionally having a trivial move assignment operator
+// Unfortunately there's no way to achieve this in GCC < 5 AFAIK, since it doesn't implement an analogue to std::is_trivially_move_assignable. We have to make do with a non-trivial move assignment operator even if T is trivially move assignable
+#ifndef TL_EXPECTED_GCC49
+    template <class T, class E, bool = std::is_trivially_destructible<T>::value && std::is_trivially_move_constructible<T>::value && std::is_trivially_move_assignable<T>::value>
+        struct expected_move_assign_base : expected_copy_assign_base<T,E> {
+            using expected_copy_assign_base<T,E>::expected_copy_assign_base;
+};
+#else
+    template <class T, class E, bool = false>
+    struct expected_move_assign_base;
+#endif
+
+    template <class T, class E>
+    struct expected_move_assign_base<T, E, false> : expected_copy_assign_base<T,E> {
+        using expected_copy_assign_base<T,E>::expected_copy_assign_base;
+
+  expected_move_assign_base() = default;
+  expected_move_assign_base(const expected_move_assign_base &rhs) = default;
+
+  expected_move_assign_base(expected_move_assign_base &&rhs) = default;
+  expected_move_assign_base &
+  operator=(const expected_move_assign_base &rhs) noexcept(
+      std::is_nothrow_move_constructible<T>::value
+          &&std::is_nothrow_move_assignable<T>::value) {
+      this->assign(std::move(rhs));
+  }
+  expected_move_assign_base &
+  operator=(expected_move_assign_base &&rhs) = default;
+};
+
+// expected_delete_ctor_base will conditionally delete copy and move constructors depending on whether T is copy/move constructible
+    template <class T, bool EnableCopy = (std::is_copy_constructible<T>::value && std::is_copy_constructible<E>::value),
+              bool EnableMove = (std::is_move_constructible<T>::value && std::is_move_constructible<T>::value)>
+struct expected_delete_ctor_base {
+  expected_delete_ctor_base() = default;
+  expected_delete_ctor_base(const expected_delete_ctor_base &) = default;
+  expected_delete_ctor_base(expected_delete_ctor_base &&) noexcept = default;
+  expected_delete_ctor_base &
+  operator=(const expected_delete_ctor_base &) = default;
+  expected_delete_ctor_base &
+  operator=(expected_delete_ctor_base &&) noexcept = default;
+};
+
+template <class T> struct expected_delete_ctor_base<T, true, false> {
+  expected_delete_ctor_base() = default;
+  expected_delete_ctor_base(const expected_delete_ctor_base &) = default;
+  expected_delete_ctor_base(expected_delete_ctor_base &&) noexcept = delete;
+  expected_delete_ctor_base &
+  operator=(const expected_delete_ctor_base &) = default;
+  expected_delete_ctor_base &
+  operator=(expected_delete_ctor_base &&) noexcept = default;
+};
+
+template <class T> struct expected_delete_ctor_base<T, false, true> {
+  expected_delete_ctor_base() = default;
+  expected_delete_ctor_base(const expected_delete_ctor_base &) = delete;
+  expected_delete_ctor_base(expected_delete_ctor_base &&) noexcept = default;
+  expected_delete_ctor_base &
+  operator=(const expected_delete_ctor_base &) = default;
+  expected_delete_ctor_base &
+  operator=(expected_delete_ctor_base &&) noexcept = default;
+};
+
+template <class T> struct expected_delete_ctor_base<T, false, false> {
+  expected_delete_ctor_base() = default;
+  expected_delete_ctor_base(const expected_delete_ctor_base &) = delete;
+  expected_delete_ctor_base(expected_delete_ctor_base &&) noexcept = delete;
+  expected_delete_ctor_base &
+  operator=(const expected_delete_ctor_base &) = default;
+  expected_delete_ctor_base &
+  operator=(expected_delete_ctor_base &&) noexcept = default;
+};
+
+// expected_delete_assign_base will conditionally delete copy and move constructors depending on whether T is copy/move constructible + assignable
+template <class T,
+          bool EnableCopy = (std::is_copy_constructible<T>::value &&
                              std::is_copy_constructible<E>::value &&
-                             std::is_copy_constructible<T>::value &&
-                             std::is_nothrow_move_constructible<E>::value),
-    bool EnableMoveAssign = (std::is_move_constructible<T>::value &&
+                             std::is_copy_assignable<T>::value &&
+                             std::is_copy_assignable<E>::value),
+          bool EnableMove = (std::is_move_constructible<T>::value &&
+                             std::is_move_constructible<E>::value &&
                              std::is_move_assignable<T>::value &&
-                             std::is_nothrow_move_constructible<E>::value &&
-                             std::is_nothrow_move_assignable<E>::value)>
-struct expected_copy_move_base {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
+                             std::is_move_assignable<E>::value)>
+struct expected_delete_assign_base {
+  expected_delete_assign_base() = default;
+  expected_delete_assign_base(const expected_delete_assign_base &) = default;
+  expected_delete_assign_base(expected_delete_assign_base &&) noexcept =
+      default;
+  expected_delete_assign_base &
+  operator=(const expected_delete_assign_base &) = default;
+  expected_delete_assign_base &
+  operator=(expected_delete_assign_base &&) noexcept = default;
 };
 
-template <class T, class E>
-struct expected_copy_move_base<T, E, true, true, true, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
+template <class T> struct expected_delete_assign_base<T, true, false> {
+  expected_delete_assign_base() = default;
+  expected_delete_assign_base(const expected_delete_assign_base &) = default;
+  expected_delete_assign_base(expected_delete_assign_base &&) noexcept =
+      default;
+  expected_delete_assign_base &
+  operator=(const expected_delete_assign_base &) = default;
+  expected_delete_assign_base &
+  operator=(expected_delete_assign_base &&) noexcept = delete;
 };
 
-template <class T, class E>
-struct expected_copy_move_base<T, E, true, true, false, true> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
+template <class T> struct expected_delete_assign_base<T, false, true> {
+  expected_delete_assign_base() = default;
+  expected_delete_assign_base(const expected_delete_assign_base &) = default;
+  expected_delete_assign_base(expected_delete_assign_base &&) noexcept =
+      default;
+  expected_delete_assign_base &
+  operator=(const expected_delete_assign_base &) = delete;
+  expected_delete_assign_base &
+  operator=(expected_delete_assign_base &&) noexcept = default;
 };
 
-template <class T, class E>
-struct expected_copy_move_base<T, E, true, true, false, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, true, false, true, true> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, true, false, true, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, true, false, false, true> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, true, false, false, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, false, true, true> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, false, true, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, false, false, true> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, false, false, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, true, true, true> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, true, true, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = default;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, true, false, true> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = default;
-};
-
-template <class T, class E>
-struct expected_copy_move_base<T, E, false, true, false, false> {
-  expected_copy_move_base() = default;
-  ~expected_copy_move_base() = default;
-  expected_copy_move_base(const expected_copy_move_base &) = delete;
-  expected_copy_move_base(expected_copy_move_base &&) noexcept = default;
-  expected_copy_move_base &operator=(const expected_copy_move_base &) = delete;
-  expected_copy_move_base &
-  operator=(expected_copy_move_base &&) noexcept = delete;
+template <class T> struct expected_delete_assign_base<T, false, false> {
+  expected_delete_assign_base() = default;
+  expected_delete_assign_base(const expected_delete_assign_base &) = default;
+  expected_delete_assign_base(expected_delete_assign_base &&) noexcept =
+      default;
+  expected_delete_assign_base &
+  operator=(const expected_delete_assign_base &) = delete;
+  expected_delete_assign_base &
+  operator=(expected_delete_assign_base &&) noexcept = delete;
 };
 
 // This is needed to be able to construct the expected_default_ctor_base which
@@ -597,173 +775,6 @@ template <class T, class E> struct expected_default_ctor_base<T, E, false> {
 
   constexpr explicit expected_default_ctor_base(default_constructor_tag) {}
 };
-
-// expected_impl provides indirection for the copy/move constructor/assignment
-// operators, so those in expected itself can be declared `=default`. This
-// allows the base classes for conditionally deleting those special member
-// functions to work.
-template <class T, class E>
-struct expected_impl : protected expected_storage_base<T, E> {
-  T *valptr() { return std::addressof(this->m_val); }
-  unexpected<E> *errptr() { return std::addressof(this->m_unexpect); }
-  T &val() { return this->m_val; }
-  unexpected<E> &err() { return this->m_unexpect; }
-  const T &val() const { return this->m_val; }
-  const unexpected<E> &err() const { return this->m_unexpect; }
-
-  constexpr const T &operator*() const & { return val(); }
-  constexpr T &operator*() & { return val(); }
-  constexpr const T &&operator*() const && { return std::move(val()); }
-  constexpr T &&operator*() && { return std::move(val()); }
-
-  using storage_base = detail::expected_storage_base<T, E>;
-  using storage_base::storage_base;
-
-  constexpr expected_impl() = default;
-
-  constexpr expected_impl(const expected_impl &rhs) {
-    if (this->m_has_val) {
-      ::new (valptr()) T(*rhs);
-    } else {
-      ::new (errptr()) unexpected<E>(rhs.m_unexpect);
-    }
-  }
-
-  constexpr expected_impl(expected_impl &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value
-          &&std::is_nothrow_move_constructible<E>::value) {
-    if (rhs.m_has_val) {
-      ::new (valptr()) T(std::move(rhs.m_val));
-    } else {
-      ::new (errptr()) unexpected<E>(std::move(rhs.m_unexpect));
-    }
-  }
-
-  expected_impl &operator=(const expected_impl &rhs) { return assign(rhs); }
-
-  expected_impl &operator=(expected_impl &&rhs) {
-    return assign(std::move(rhs));
-  }
-
-  // These assign overloads ensure that the most efficient assignment
-  // implementation is used while maintaining the strong exception guarantee.
-  // The problematic case is where rhs has a value, but *this does not.
-  //
-  // This overload handles the case where we can just copy-construct `T`
-  // directly into place without throwing.
-  template <class U = T,
-            detail::enable_if_t<std::is_nothrow_copy_constructible<U>::value>
-                * = nullptr>
-  expected_impl &assign(const expected_impl &rhs) noexcept {
-    if (!this->m_has_val && rhs.m_has_val) {
-      err().~unexpected<E>();
-      ::new (valptr()) T(*rhs);
-      this->m_has_val = true;
-      return *this;
-    }
-
-    return assign_common(rhs);
-  }
-
-  // This overload handles the case where we can attempt to create a copy of
-  // `T`, then no-throw move it into place if the copy was successful.
-  template <class U = T,
-            detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
-                                std::is_nothrow_move_constructible<U>::value>
-                * = nullptr>
-  expected_impl &assign(const expected_impl &rhs) noexcept {
-    if (!this->m_has_val && rhs.m_has_val) {
-      T tmp = *rhs;
-      err().~unexpected<E>();
-      ::new (valptr()) T(std::move(tmp));
-      this->m_has_val = true;
-      return *this;
-    }
-
-    return assign_common(rhs);
-  }
-
-  // This overload is the worst-case, where we have to move-construct the
-  // unexpected value into temporary storage, then try to copy the T into place.
-  // If the construction succeeds, then everything is fine, but if it throws,
-  // then we move the old unexpected value back into place before rethrowing the
-  // exception.
-  template <class U = T,
-            detail::enable_if_t<!std::is_nothrow_copy_constructible<U>::value &&
-                                !std::is_nothrow_move_constructible<U>::value>
-                * = nullptr>
-  expected_impl &assign(const expected_impl &rhs) {
-    if (!this->m_has_val && rhs.m_has_val) {
-      auto tmp = std::move(err());
-      err().~unexpected<E>();
-
-      try {
-        ::new (valptr()) T(*rhs);
-        this->m_has_val = true;
-      } catch (...) {
-        err() = std::move(tmp);
-        throw;
-      }
-      return *this;
-    }
-
-    return assign_common(rhs);
-  }
-
-  // These overloads do the same as above, but for rvalues
-  template <class U = T,
-            detail::enable_if_t<std::is_nothrow_move_constructible<U>::value>
-                * = nullptr>
-  expected_impl &assign(expected_impl &&rhs) noexcept {
-    if (!this->m_has_val && rhs.m_has_val) {
-      err().~unexpected<E>();
-      ::new (valptr()) T(*std::move(rhs));
-      this->m_has_val = true;
-      return *this;
-    }
-
-    return assign_common(rhs);
-  }
-
-  template <class U = T,
-            detail::enable_if_t<!std::is_nothrow_move_constructible<U>::value>
-                * = nullptr>
-  expected_impl &assign(expected_impl &&rhs) {
-    if (!this->m_has_val && rhs.m_has_val) {
-      auto tmp = std::move(err());
-      err().~unexpected<E>();
-      try {
-        ::new (valptr()) T(*std::move(rhs));
-        this->m_has_val = true;
-      } catch (...) {
-        err() = std::move(tmp);
-        throw;
-      }
-
-      return *this;
-    }
-
-    return assign_common(rhs);
-  }
-
-  // The common part of move/copy assigning
-  template <class Rhs> expected_impl &assign_common(Rhs &&rhs) {
-    if (this->m_has_val) {
-      if (rhs.m_has_val) {
-        val() = *std::forward<Rhs>(rhs);
-      } else {
-        val().~T();
-        ::new (errptr()) unexpected<E>(std::forward<Rhs>(rhs).err());
-      }
-    } else {
-      if (!rhs.m_has_val) {
-        err() = std::forward<Rhs>(rhs).err();
-      }
-    }
-
-    return *this;
-  }
-};
 } // namespace detail
 
 template <class E> class bad_expected_access : public std::exception {
@@ -791,8 +802,9 @@ private:
 /// has been destroyed. The initialization state of the contained object is
 /// tracked by the expected object.
 template <class T, class E>
-class expected : private detail::expected_impl<T, E>,
-                 private detail::expected_copy_move_base<T, E>,
+class expected : private detail::expected_move_assign<T, E>,
+                 private detail::expected_delete_ctor_base<T, E>,
+                 private detail::expected_delete_assign_base<T, E>,
                  private detail::expected_default_ctor_base<T, E> {
   static_assert(!std::is_reference<T>::value, "T must not be a reference");
   static_assert(!std::is_same<T, std::remove_cv<in_place_t>>::value,
@@ -822,11 +834,11 @@ public:
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
     !defined(TL_EXPECTED_GCC54)
   /// \group and_then
-  /// Carries out some operation which returns an optional on the stored object
+  /// Carries out some operation which returns an expected on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
-  /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
+  /// returns a `std::expected<U>` for some `U`. \returns Let `U` be the result
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
-  /// `std::optional<U>`. The return value is empty if `*this` is empty,
+  /// `std::expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
   /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
   /// and_then(F &&f) &;
@@ -876,11 +888,11 @@ public:
 
 #else
   /// \group and_then
-  /// Carries out some operation which returns an optional on the stored object
+  /// Carries out some operation which returns an expected on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
-  /// returns a `std::optional<U>` for some `U`. \returns Let `U` be the result
+  /// returns a `std::expected<U>` for some `U`. \returns Let `U` be the result
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
-  /// `std::optional<U>`. The return value is empty if `*this` is empty,
+  /// `std::expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
   /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
   /// and_then(F &&f) &;

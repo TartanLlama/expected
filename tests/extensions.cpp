@@ -8,8 +8,8 @@
   REQUIRE(e);
 
 TEST_CASE("Map extensions", "[extensions.map]") {
-  auto mul2 = [](auto a) { return a * 2; };
-  auto ret_void = [](auto a) {};
+  auto mul2 = [](int a) { return a * 2; };
+  auto ret_void = [](int a) {};
 
   {
     tl::expected<int, int> e = 21;

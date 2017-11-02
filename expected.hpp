@@ -69,62 +69,6 @@
 namespace tl {
 template <class T, class E> class expected;
 
-/// \exclude
-namespace detail {
-template <bool E, class T = void>
-using enable_if_t = typename std::enable_if<E, T>::type;
-template <class T> using decay_t = typename std::decay<T>::type;
-
-// std::conjunction from C++17
-template <class...> struct conjunction : std::true_type {};
-template <class B> struct conjunction<B> : B {};
-template <class B, class... Bs>
-struct conjunction<B, Bs...>
-    : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
-
-// Trait for checking if a type is a tl::expected
-template <class T> struct is_expected_impl : std::false_type {};
-template <class T, class E>
-struct is_expected_impl<expected<T, E>> : std::true_type {};
-template <class T> using is_expected = is_expected_impl<decay_t<T>>;
-
-// std::invoke from C++17
-// https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
-template <typename Fn, typename... Args,
-          typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
-          int = 0>
-constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
-    noexcept(std::mem_fn(f)(std::forward<Args>(args)...)))
-    -> decltype(std::mem_fn(f)(std::forward<Args>(args)...)) {
-  return std::mem_fn(f)(std::forward<Args>(args)...);
-}
-
-template <typename Fn, typename... Args,
-          typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
-constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
-    noexcept(std::forward<Fn>(f)(std::forward<Args>(args)...)))
-    -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
-  return std::forward<Fn>(f)(std::forward<Args>(args)...);
-}
-
-// std::invoke_result from C++17
-template <class F, class, class... Us> struct invoke_result_impl;
-
-template <class F, class... Us>
-struct invoke_result_impl<
-    F, decltype(invoke(std::declval<F>(), std::declval<Us>()...), void()),
-    Us...> {
-  using type = decltype(invoke(std::declval<F>(), std::declval<Us>()...));
-};
-
-template <class F, class... Us>
-using invoke_result = invoke_result_impl<F, void, Us...>;
-
-template <class F, class... Us>
-using invoke_result_t = typename invoke_result<F, Us...>::type;
-
-} // namespace detail
-
 #ifndef TL_IN_PLACE_MONOSTATE_DEFINED
 #define TL_IN_PLACE_MONOSTATE_DEFINED
 /// \brief Used to represent an expected with no data
@@ -210,6 +154,82 @@ struct unexpect_t {
 };
 /// \brief A tag to tell expected to construct the unexpected value
 static constexpr unexpect_t unexpect{};
+
+/// \exclude
+namespace detail {
+template <bool E, class T = void>
+using enable_if_t = typename std::enable_if<E, T>::type;
+template <class T> using decay_t = typename std::decay<T>::type;
+
+// std::conjunction from C++17
+template <class...> struct conjunction : std::true_type {};
+template <class B> struct conjunction<B> : B {};
+template <class B, class... Bs>
+struct conjunction<B, Bs...>
+    : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
+
+// Trait for checking if a type is a tl::expected
+template <class T> struct is_expected_impl : std::false_type {};
+template <class T, class E>
+struct is_expected_impl<expected<T, E>> : std::true_type {};
+template <class T> using is_expected = is_expected_impl<decay_t<T>>;
+
+// std::invoke from C++17
+// https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
+template <typename Fn, typename... Args,
+          typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
+          int = 0>
+constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
+    noexcept(std::mem_fn(f)(std::forward<Args>(args)...)))
+    -> decltype(std::mem_fn(f)(std::forward<Args>(args)...)) {
+  return std::mem_fn(f)(std::forward<Args>(args)...);
+}
+
+template <typename Fn, typename... Args,
+          typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
+constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
+    noexcept(std::forward<Fn>(f)(std::forward<Args>(args)...)))
+    -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
+  return std::forward<Fn>(f)(std::forward<Args>(args)...);
+}
+
+// std::invoke_result from C++17
+template <class F, class, class... Us> struct invoke_result_impl;
+
+template <class F, class... Us>
+struct invoke_result_impl<
+    F, decltype(invoke(std::declval<F>(), std::declval<Us>()...), void()),
+    Us...> {
+  using type = decltype(invoke(std::declval<F>(), std::declval<Us>()...));
+};
+
+template <class F, class... Us>
+using invoke_result = invoke_result_impl<F, void, Us...>;
+
+template <class F, class... Us>
+using invoke_result_t = typename invoke_result<F, Us...>::type;
+
+template <class T, class E, class U>
+using enable_forward_value = detail::enable_if_t<
+    std::is_constructible<T, U &&>::value &&
+    !std::is_same<detail::decay_t<U>, in_place_t>::value &&
+    !std::is_same<expected<T, E>, detail::decay_t<U>>::value &&
+    !std::is_same<unexpected<E>, detail::decay_t<U>>::value>;
+
+template <class T, class E, class U, class G, class UR, class GR>
+using enable_from_other = detail::enable_if_t<
+    std::is_constructible<T, UR>::value &&
+    std::is_constructible<T, GR>::value &&
+    !std::is_constructible<T, expected<U, G> &>::value &&
+    !std::is_constructible<T, expected<U, G> &&>::value &&
+    !std::is_constructible<T, const expected<U, G> &>::value &&
+    !std::is_constructible<T, const expected<U, G> &&>::value &&
+    !std::is_convertible<expected<U, G> &, T>::value &&
+    !std::is_convertible<expected<U, G> &&, T>::value &&
+    !std::is_convertible<const expected<U, G> &, T>::value &&
+    !std::is_convertible<const expected<U, G> &&, T>::value>;
+
+} // namespace detail
 
 /// \exclude
 namespace detail {
@@ -1240,11 +1260,12 @@ public:
       : impl_base(unexpect, il, std::forward<Args>(args)...),
         ctor_base(detail::default_constructor_tag{}) {}
 
-  // TODO SFINAE
-  template <class U, class G,
-            detail::enable_if_t<!(std::is_convertible<U const &, T>::value &&
-                                  std::is_convertible<G const &, E>::value)> * =
-                nullptr>
+  template <
+      class U, class G,
+      detail::enable_if_t<!(std::is_convertible<U const &, T>::value &&
+                            std::is_convertible<G const &, E>::value)> * =
+          nullptr,
+      detail::enable_from_other<T, E, U, G, const U &, const G &> * = nullptr>
   explicit TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1254,12 +1275,13 @@ public:
     }
   }
 
-  // TODO SFINAE
   /// \exclude
-  template <class U, class G,
-            detail::enable_if_t<(std::is_convertible<U const &, T>::value &&
-                                 std::is_convertible<G const &, E>::value)> * =
-                nullptr>
+  template <
+      class U, class G,
+      detail::enable_if_t<(std::is_convertible<U const &, T>::value &&
+                           std::is_convertible<G const &, E>::value)> * =
+          nullptr,
+      detail::enable_from_other<T, E, U, G, const U &, const G &> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1269,11 +1291,11 @@ public:
     }
   }
 
-  // TODO SFINAE
   template <
       class U, class G,
       detail::enable_if_t<!(std::is_convertible<U &&, T>::value &&
-                            std::is_convertible<G &&, E>::value)> * = nullptr>
+                            std::is_convertible<G &&, E>::value)> * = nullptr,
+      detail::enable_from_other<T, E, U, G, U &&, G &&> * = nullptr>
   explicit TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1283,12 +1305,12 @@ public:
     }
   }
 
-  // TODO SFINAE
   /// \exclude
   template <
       class U, class G,
       detail::enable_if_t<(std::is_convertible<U &&, T>::value &&
-                           std::is_convertible<G &&, E>::value)> * = nullptr>
+                           std::is_convertible<G &&, E>::value)> * = nullptr,
+      detail::enable_from_other<T, E, U, G, U &&, G &&> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1298,15 +1320,17 @@ public:
     }
   }
 
-  // TODO SFINAE
-  template <class U = T, detail::enable_if_t<
-                             !std::is_convertible<U &&, T>::value> * = nullptr>
+  template <
+      class U = T,
+      detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr,
+      detail::enable_forward_value<T, E, U> * = nullptr>
   explicit constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
-  // TODO SFINAE
   /// \exclude
-  template <class U = T, detail::enable_if_t<
-                             std::is_convertible<U &&, T>::value> * = nullptr>
+  template <
+      class U = T,
+      detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr,
+      detail::enable_forward_value<T, E, U> * = nullptr>
   constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
   template <
@@ -1619,7 +1643,7 @@ constexpr auto map_error_impl(Exp &&exp, F &&f) -> ret_t<Exp, Ret> {
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Exp>())),
-              detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 constexpr detail::decay_t<Exp> or_else_impl(Exp &&exp, F &&f) {
   if (exp.has_value()) {
     return std::forward<Exp>(exp);
@@ -1631,7 +1655,7 @@ constexpr detail::decay_t<Exp> or_else_impl(Exp &&exp, F &&f) {
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Exp>())),
-              detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
 detail::decay_t<Exp> or_else_impl(Exp &&exp, F &&f) {
   if (exp.has_value()) {
     return std::forward<Exp>(exp);

@@ -69,8 +69,7 @@
 namespace tl {
 template <class T, class E> class expected;
 
-#ifndef TL_IN_PLACE_MONOSTATE_DEFINED
-#define TL_IN_PLACE_MONOSTATE_DEFINED
+#ifndef TL_OPTIONAL_EXPECTED_MUTEX
 /// \brief Used to represent an expected with no data
 class monostate {};
 
@@ -157,9 +156,16 @@ static constexpr unexpect_t unexpect{};
 
 /// \exclude
 namespace detail {
+#ifndef TL_OPTIONAL_EXPECTED_MUTEX
+// C++14-style aliases for brevity
+template <class T> using remove_const_t = typename std::remove_const<T>::type;
+template <class T>
+using remove_reference_t = typename std::remove_reference<T>::type;
+template <class T> using decay_t = typename std::decay<T>::type;
 template <bool E, class T = void>
 using enable_if_t = typename std::enable_if<E, T>::type;
-template <class T> using decay_t = typename std::decay<T>::type;
+template <bool B, class T, class F>
+using conditional_t = typename std::conditional<B, T, F>::type;
 
 // std::conjunction from C++17
 template <class...> struct conjunction : std::true_type {};
@@ -167,12 +173,6 @@ template <class B> struct conjunction<B> : B {};
 template <class B, class... Bs>
 struct conjunction<B, Bs...>
     : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
-
-// Trait for checking if a type is a tl::expected
-template <class T> struct is_expected_impl : std::false_type {};
-template <class T, class E>
-struct is_expected_impl<expected<T, E>> : std::true_type {};
-template <class T> using is_expected = is_expected_impl<decay_t<T>>;
 
 // std::invoke from C++17
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
@@ -208,16 +208,23 @@ using invoke_result = invoke_result_impl<F, void, Us...>;
 
 template <class F, class... Us>
 using invoke_result_t = typename invoke_result<F, Us...>::type;
+#endif
+
+// Trait for checking if a type is a tl::expected
+template <class T> struct is_expected_impl : std::false_type {};
+template <class T, class E>
+struct is_expected_impl<expected<T, E>> : std::true_type {};
+template <class T> using is_expected = is_expected_impl<decay_t<T>>;
 
 template <class T, class E, class U>
-using enable_forward_value = detail::enable_if_t<
+using expected_enable_forward_value = detail::enable_if_t<
     std::is_constructible<T, U &&>::value &&
     !std::is_same<detail::decay_t<U>, in_place_t>::value &&
     !std::is_same<expected<T, E>, detail::decay_t<U>>::value &&
     !std::is_same<unexpected<E>, detail::decay_t<U>>::value>;
 
 template <class T, class E, class U, class G, class UR, class GR>
-using enable_from_other = detail::enable_if_t<
+using expected_enable_from_other = detail::enable_if_t<
     std::is_constructible<T, UR>::value &&
     std::is_constructible<T, GR>::value &&
     !std::is_constructible<T, expected<U, G> &>::value &&
@@ -1260,12 +1267,12 @@ public:
       : impl_base(unexpect, il, std::forward<Args>(args)...),
         ctor_base(detail::default_constructor_tag{}) {}
 
-  template <
-      class U, class G,
-      detail::enable_if_t<!(std::is_convertible<U const &, T>::value &&
-                            std::is_convertible<G const &, E>::value)> * =
-          nullptr,
-      detail::enable_from_other<T, E, U, G, const U &, const G &> * = nullptr>
+  template <class U, class G,
+            detail::enable_if_t<!(std::is_convertible<U const &, T>::value &&
+                                  std::is_convertible<G const &, E>::value)> * =
+                nullptr,
+            detail::expected_enable_from_other<T, E, U, G, const U &, const G &>
+                * = nullptr>
   explicit TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1276,12 +1283,12 @@ public:
   }
 
   /// \exclude
-  template <
-      class U, class G,
-      detail::enable_if_t<(std::is_convertible<U const &, T>::value &&
-                           std::is_convertible<G const &, E>::value)> * =
-          nullptr,
-      detail::enable_from_other<T, E, U, G, const U &, const G &> * = nullptr>
+  template <class U, class G,
+            detail::enable_if_t<(std::is_convertible<U const &, T>::value &&
+                                 std::is_convertible<G const &, E>::value)> * =
+                nullptr,
+            detail::expected_enable_from_other<T, E, U, G, const U &, const G &>
+                * = nullptr>
   TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1295,7 +1302,7 @@ public:
       class U, class G,
       detail::enable_if_t<!(std::is_convertible<U &&, T>::value &&
                             std::is_convertible<G &&, E>::value)> * = nullptr,
-      detail::enable_from_other<T, E, U, G, U &&, G &&> * = nullptr>
+      detail::expected_enable_from_other<T, E, U, G, U &&, G &&> * = nullptr>
   explicit TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1310,7 +1317,7 @@ public:
       class U, class G,
       detail::enable_if_t<(std::is_convertible<U &&, T>::value &&
                            std::is_convertible<G &&, E>::value)> * = nullptr,
-      detail::enable_from_other<T, E, U, G, U &&, G &&> * = nullptr>
+      detail::expected_enable_from_other<T, E, U, G, U &&, G &&> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
@@ -1323,14 +1330,14 @@ public:
   template <
       class U = T,
       detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr,
-      detail::enable_forward_value<T, E, U> * = nullptr>
+      detail::expected_enable_forward_value<T, E, U> * = nullptr>
   explicit constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
   /// \exclude
   template <
       class U = T,
       detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr,
-      detail::enable_forward_value<T, E, U> * = nullptr>
+      detail::expected_enable_forward_value<T, E, U> * = nullptr>
   constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
   template <
@@ -1816,4 +1823,5 @@ void swap(expected<T, E> &lhs,
 }
 } // namespace tl
 
+#define TL_OPTIONAL_EXPECTED_MUTEX
 #endif

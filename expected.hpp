@@ -242,6 +242,9 @@ using expected_enable_from_other = detail::enable_if_t<
 
 /// \exclude
 namespace detail {
+struct no_init_t{};
+static constexpr no_init_t no_init{};
+
 // Implements the storage of the values, and ensures that the destructor is
 // trivial if it can be.
 //
@@ -252,6 +255,7 @@ template <class T, class E, bool = std::is_trivially_destructible<T>::value,
           bool = std::is_trivially_destructible<E>::value>
 struct expected_storage_base {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -297,6 +301,7 @@ struct expected_storage_base {
 // so the destructor of the `expected` can be trivial.
 template <class T, class E> struct expected_storage_base<T, E, true, true> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -335,6 +340,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
 // T is trivial, E is not.
 template <class T, class E> struct expected_storage_base<T, E, true, false> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -378,6 +384,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
 // E is trivial, T is not.
 template <class T, class E> struct expected_storage_base<T, E, false, true> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -581,7 +588,8 @@ struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;
 
   expected_copy_base() = default;
-  expected_copy_base(const expected_copy_base &rhs) {
+  expected_copy_base(const expected_copy_base &rhs) :
+      expected_operations_base<T,E>(no_init) {
     if (rhs.has_value()) {
       this->construct(rhs.get());
     } else {
@@ -616,7 +624,8 @@ struct expected_move_base<T, E, false> : expected_copy_base<T, E> {
   expected_move_base(const expected_move_base &rhs) = default;
 
   expected_move_base(expected_move_base &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value) {
+      std::is_nothrow_move_constructible<T>::value) :
+          expected_copy_base<T,E>(no_init) {
     if (rhs.has_value()) {
       this->construct(std::move(rhs.get()));
     } else {

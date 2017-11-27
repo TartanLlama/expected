@@ -1,6 +1,11 @@
 #include "catch.hpp"
 #include "expected.hpp"
 
+// Old versions of GCC don't have the correct trait names. Could fix them up if needs be.
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
+     !defined(__clang__))
+// nothing for now
+#else
 TEST_CASE("Triviality", "[bases.triviality]") {
     REQUIRE(std::is_trivially_copy_constructible<tl::expected<int,int>>::value);
     REQUIRE(std::is_trivially_copy_assignable<tl::expected<int,int>>::value);
@@ -115,6 +120,6 @@ TEST_CASE("Deletion", "[bases.deletion]") {
         //REQUIRE(!std::is_move_constructible<tl::expected<T,int>>::value);
         //REQUIRE(!std::is_move_assignable<tl::expected<T,int>>::value);
     }
-
-
 }
+
+#endif

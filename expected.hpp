@@ -1537,22 +1537,22 @@ public:
   constexpr bool has_value() const noexcept { return this->m_has_val; }
   constexpr const T &value() const & {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return val();
   }
   TL_EXPECTED_11_CONSTEXPR T &value() & {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return val();
   }
   constexpr const T &&value() const && {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return std::move(val());
   }
   TL_EXPECTED_11_CONSTEXPR T &&value() && {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return std::move(val());
   }
   constexpr const E &error() const & { return err().value(); }

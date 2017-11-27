@@ -911,8 +911,8 @@ public:
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
   /// `std::expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
-  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
-  /// and_then(F &&f) &;
+  /// is returned.
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F> TL_EXPECTED_11_CONSTEXPR auto and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T &>;
     static_assert(detail::is_expected<result>::value,
@@ -965,8 +965,8 @@ public:
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
   /// `std::expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
-  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
-  /// and_then(F &&f) &;
+  /// is returned.
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR detail::invoke_result_t<F, T &> and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T &>;

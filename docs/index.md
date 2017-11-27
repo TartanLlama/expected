@@ -264,7 +264,7 @@ public:
     using <a href='doc_expected.html#tl::expected-T,E-'>unexpected_type</a> = <a href='doc_expected.html#tl::unexpected-E-'>unexpected&lt;E&gt;</a>;
     
     template &lt;class F&gt;
-    'hidden' <a href='doc_expected.html#tl::expected-T,E-::and_then(F&&)&'>and_then</a>(F&amp;&amp; f) &amp;;
+    constexpr auto and_then(F &amp;&amp;f) &amp;;
     template &lt;class F&gt;
     constexpr auto and_then(F &amp;&amp;f) &amp;&amp;;
     template &lt;class F&gt;
@@ -386,7 +386,7 @@ An `expected<T, E>` object is an object that contains the storage for another ob
 ### Function template `tl::expected::and_then`<a id="tl::expected-T,E-::and_then(F&&)&"></a>
 
 <pre><code class="language-cpp">(1)  template &lt;class F&gt;
-     'hidden' and_then(F&amp;&amp; f) &amp;;
+     constexpr auto and_then(F &amp;&amp;f) &amp;;
 
 (2)  template &lt;class F&gt;
      constexpr auto and_then(F &amp;&amp;f) &amp;&amp;;
@@ -397,7 +397,7 @@ An `expected<T, E>` object is an object that contains the storage for another ob
 (4)  template &lt;class F&gt;
      constexpr auto and_then(F &amp;&amp;f) const &amp;&amp;;</code></pre>
 
-Carries out some operation which returns an expected on the stored object if there is one. \\requires `std::invoke(std::forward<F>(f), value())` returns a `std::expected<U>` for some `U`. \\returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::expected<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned. \\group and\_then \\synopsis template \<class F\>\\nconstexpr auto and\_then(F &\&f) &;
+Carries out some operation which returns an expected on the stored object if there is one. \\requires `std::invoke(std::forward<F>(f), value())` returns a `std::expected<U>` for some `U`. \\returns Let `U` be the result of `std::invoke(std::forward<F>(f), value())`. Returns a `std::expected<U>`. The return value is empty if `*this` is empty, otherwise the return value of `std::invoke(std::forward<F>(f), value())` is returned.
 
 ### Function template `tl::expected::map`<a id="tl::expected-T,E-::map(F&&)&"></a>
 

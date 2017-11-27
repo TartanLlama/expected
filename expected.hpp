@@ -1541,44 +1541,77 @@ public:
     }
   }
 
+  /// \returns a pointer to the stored value
+  /// \requires a value is stored
+  /// \group pointer
   constexpr const T *operator->() const { return valptr(); }
+  /// \group pointer
   TL_EXPECTED_11_CONSTEXPR T *operator->() { return valptr(); }
+
+  /// \returns the stored value
+  /// \requires a value is stored
+  /// \group deref
   constexpr const T &operator*() const & { return val(); }
+  /// \group deref
   TL_EXPECTED_11_CONSTEXPR T &operator*() & { return val(); }
+  /// \group deref
   constexpr const T &&operator*() const && { return std::move(val()); }
+  /// \group deref
   TL_EXPECTED_11_CONSTEXPR T &&operator*() && { return std::move(val()); }
-  constexpr explicit operator bool() const noexcept { return this->m_has_val; }
+
+  /// \returns whether or not the optional has a value
+  /// \group has_value
   constexpr bool has_value() const noexcept { return this->m_has_val; }
+  /// \group has_value
+  constexpr explicit operator bool() const noexcept { return this->m_has_val; }
+
+
+  /// \returns the contained value if there is one, otherwise throws [bad_expected_access]
+  /// \group value
   constexpr const T &value() const & {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return val();
   }
+  /// \group value
   TL_EXPECTED_11_CONSTEXPR T &value() & {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return val();
   }
+  /// \group value
   constexpr const T &&value() const && {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return std::move(val());
   }
+  /// \group value
   TL_EXPECTED_11_CONSTEXPR T &&value() && {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return std::move(val());
   }
+
+  /// \returns the unexpected value
+  /// \requires there is an unexpected value
+  /// \group error
   constexpr const E &error() const & { return err().value(); }
+  /// \group error
   TL_EXPECTED_11_CONSTEXPR E &error() & { return err().value(); }
+  /// \group error
   constexpr const E &&error() const && { return std::move(err().value()); }
+  /// \group error
   TL_EXPECTED_11_CONSTEXPR E &&error() && { return std::move(err().value()); }
+
+  /// \returns the stored value if there is one, otherwise returns `u`
+  /// \group value_or
   template <class U> constexpr T value_or(U &&v) const & {
     static_assert(std::is_copy_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be copy-constructible and convertible to from U&&");
     return bool(*this) ? **this : static_cast<T>(std::forward<U>(v));
   }
+  /// \group value_or
   template <class U> TL_EXPECTED_11_CONSTEXPR T value_or(U &&v) && {
     static_assert(std::is_move_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,

@@ -336,43 +336,31 @@ public:
     
     void <a href='doc_expected.html#tl::expected-T,E-'>swap</a>(<a href='doc_expected.html#tl::expected-T,E-'>expected</a>&amp; rhs) noexcept(std::is_nothrow_move_constructible&lt;T&gt;::value&amp;&amp;noexcept(swap(std::declval&lt;T&amp;&gt;(), std::declval&lt;T&amp;&gt;()))&amp;&amp;std::is_nothrow_move_constructible&lt;E&gt;::value&amp;&amp;noexcept(swap(std::declval&lt;E&amp;&gt;(), std::declval&lt;E&amp;&gt;())));
     
-    constexpr const T* <a href='doc_expected.html#tl::expected-T,E-'>operator-&gt;</a>() const;
+    constexpr const T* <a href='doc_expected.html#tl::expected-T,E-::operator--()const'>operator-&gt;</a>() const;
+    T* <a href='doc_expected.html#tl::expected-T,E-::operator--()const'>operator-&gt;</a>();
     
-    T* <a href='doc_expected.html#tl::expected-T,E-'>operator-&gt;</a>();
+    constexpr const T&amp; <a href='doc_expected.html#tl::expected-T,E-::operator*()const&'>operator*</a>() const &amp;;
+    T&amp; <a href='doc_expected.html#tl::expected-T,E-::operator*()const&'>operator*</a>() &amp;;
+    constexpr const T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-::operator*()const&'>operator*</a>() const &amp;&amp;;
+    T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-::operator*()const&'>operator*</a>() &amp;&amp;;
     
-    constexpr const T&amp; <a href='doc_expected.html#tl::expected-T,E-'>operator*</a>() const &amp;;
+    constexpr bool <a href='doc_expected.html#tl::expected-T,E-::has_value()const'>has_value</a>() const noexcept;
+    constexpr <a href='doc_expected.html#tl::expected-T,E-::has_value()const'>operator bool</a>() const noexcept;
     
-    T&amp; <a href='doc_expected.html#tl::expected-T,E-'>operator*</a>() &amp;;
+    constexpr const T&amp; <a href='doc_expected.html#tl::expected-T,E-::value()const&'>value</a>() const &amp;;
+    T&amp; <a href='doc_expected.html#tl::expected-T,E-::value()const&'>value</a>() &amp;;
+    constexpr const T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-::value()const&'>value</a>() const &amp;&amp;;
+    T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-::value()const&'>value</a>() &amp;&amp;;
     
-    constexpr const T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-'>operator*</a>() const &amp;&amp;;
-    
-    T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-'>operator*</a>() &amp;&amp;;
-    
-    constexpr <a href='doc_expected.html#tl::expected-T,E-'>operator bool</a>() const noexcept;
-    
-    constexpr bool <a href='doc_expected.html#tl::expected-T,E-'>has_value</a>() const noexcept;
-    
-    constexpr const T&amp; <a href='doc_expected.html#tl::expected-T,E-'>value</a>() const &amp;;
-    
-    T&amp; <a href='doc_expected.html#tl::expected-T,E-'>value</a>() &amp;;
-    
-    constexpr const T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-'>value</a>() const &amp;&amp;;
-    
-    T&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-'>value</a>() &amp;&amp;;
-    
-    constexpr const E&amp; <a href='doc_expected.html#tl::expected-T,E-'>error</a>() const &amp;;
-    
-    E&amp; <a href='doc_expected.html#tl::expected-T,E-'>error</a>() &amp;;
-    
-    constexpr const E&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-'>error</a>() const &amp;&amp;;
-    
-    E&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-'>error</a>() &amp;&amp;;
+    constexpr const E&amp; <a href='doc_expected.html#tl::expected-T,E-::error()const&'>error</a>() const &amp;;
+    E&amp; <a href='doc_expected.html#tl::expected-T,E-::error()const&'>error</a>() &amp;;
+    constexpr const E&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-::error()const&'>error</a>() const &amp;&amp;;
+    E&amp;&amp; <a href='doc_expected.html#tl::expected-T,E-::error()const&'>error</a>() &amp;&amp;;
     
     template &lt;class U&gt;
-    constexpr T <a href='doc_expected.html#tl::expected-T,E-'>value_or</a>(U&amp;&amp; v) const &amp;;
-    
+    constexpr T <a href='doc_expected.html#tl::expected-T,E-::value_or(U&&)const&'>value_or</a>(U&amp;&amp; v) const &amp;;
     template &lt;class U&gt;
-    T <a href='doc_expected.html#tl::expected-T,E-'>value_or</a>(U&amp;&amp; v) &amp;&amp;;
+    T <a href='doc_expected.html#tl::expected-T,E-::value_or(U&&)const&'>value_or</a>(U&amp;&amp; v) &amp;&amp;;
 };</code></pre>
 
 An `expected<T, E>` object is an object that contains the storage for another object and manages the lifetime of this contained object `T`. Alternatively it could contain the storage for another unexpected object `E`. The contained object may not be initialized after the expected object has been initialized, and may not be destroyed before the expected object has been destroyed. The initialization state of the contained object is tracked by the expected object.
@@ -437,6 +425,74 @@ Calls `f` if the expectd is in the unexpected state
 <pre><code class="language-cpp">(1)  EXPLICIT constexpr expected(const unexpected&lt;G&gt; &amp;e);
 
 (2)  EXPLICIT constexpr expected(unexpected&lt;G&gt; &amp;&amp;e);</code></pre>
+
+### Operator `tl::expected::operator->`<a id="tl::expected-T,E-::operator--()const"></a>
+
+<pre><code class="language-cpp">(1)  constexpr const T* operator-&gt;() const;
+
+(2)  T* operator-&gt;();</code></pre>
+
+*Returns*: a pointer to the stored value
+
+*Requires*: a value is stored
+
+### Operator `tl::expected::operator*`<a id="tl::expected-T,E-::operator*()const&"></a>
+
+<pre><code class="language-cpp">(1)  constexpr const T&amp; operator*() const &amp;;
+
+(2)  T&amp; operator*() &amp;;
+
+(3)  constexpr const T&amp;&amp; operator*() const &amp;&amp;;
+
+(4)  T&amp;&amp; operator*() &amp;&amp;;</code></pre>
+
+*Returns*: the stored value
+
+*Requires*: a value is stored
+
+### Function `tl::expected::has_value`<a id="tl::expected-T,E-::has_value()const"></a>
+
+<pre><code class="language-cpp">(1)  constexpr bool has_value() const noexcept;
+
+(2)  constexpr operator bool() const noexcept;</code></pre>
+
+*Returns*: whether or not the optional has a value
+
+### Function `tl::expected::value`<a id="tl::expected-T,E-::value()const&"></a>
+
+<pre><code class="language-cpp">(1)  constexpr const T&amp; value() const &amp;;
+
+(2)  T&amp; value() &amp;;
+
+(3)  constexpr const T&amp;&amp; value() const &amp;&amp;;
+
+(4)  T&amp;&amp; value() &amp;&amp;;</code></pre>
+
+*Returns*: the contained value if there is one, otherwise throws \[bad\_expected\_access\]
+
+### Function `tl::expected::error`<a id="tl::expected-T,E-::error()const&"></a>
+
+<pre><code class="language-cpp">(1)  constexpr const E&amp; error() const &amp;;
+
+(2)  E&amp; error() &amp;;
+
+(3)  constexpr const E&amp;&amp; error() const &amp;&amp;;
+
+(4)  E&amp;&amp; error() &amp;&amp;;</code></pre>
+
+*Returns*: the unexpected value
+
+*Requires*: there is an unexpected value
+
+### Function template `tl::expected::value_or`<a id="tl::expected-T,E-::value_or(U&&)const&"></a>
+
+<pre><code class="language-cpp">(1)  template &lt;class U&gt;
+     constexpr T value_or(U&amp;&amp; v) const &amp;;
+
+(2)  template &lt;class U&gt;
+     T value_or(U&amp;&amp; v) &amp;&amp;;</code></pre>
+
+*Returns*: the stored value if there is one, otherwise returns `u`
 
 -----
 

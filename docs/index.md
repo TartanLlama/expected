@@ -2,15 +2,9 @@
 
 <pre><code class="language-cpp">#define <a href='doc_expected.html#expected.hpp'>TL_EXPECTED_HPP</a>
 
-#define <a href='doc_expected.html#expected.hpp'>TL_EXPECTED_GCC49</a>
+#define <a href='doc_expected.html#expected.hpp'>TL_EXPECTED_VERSION_MAJOR</a>
 
-#define <a href='doc_expected.html#expected.hpp'>IS_TRIVIALLY_COPY_CONSTRUCTIBLE</a>(T)
-
-#define <a href='doc_expected.html#expected.hpp'>IS_TRIVIALLY_COPY_ASSIGNABLE</a>(T)
-
-#define <a href='doc_expected.html#expected.hpp'>IS_TRIVIALLY_DESTRUCTIBLE</a>(T)
-
-#define <a href='doc_expected.html#expected.hpp'>TL_EXPECTED_CXX14</a>
+#define <a href='doc_expected.html#expected.hpp'>TL_EXPECTED_VERSION_MINOR</a>
 
 #define <a href='doc_expected.html#expected.hpp'>TL_MONOSTATE_INPLACE_MUTEX</a>
 

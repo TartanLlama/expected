@@ -14,6 +14,9 @@
 #ifndef TL_EXPECTED_HPP
 #define TL_EXPECTED_HPP
 
+#define TL_EXPECTED_VERSION_MAJOR 0
+#define TL_EXPECTED_VERSION_MINOR 1
+
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -21,38 +24,49 @@
 #include <utility>
 
 #if (defined(_MSC_VER) && _MSC_VER == 1900)
+/// \exclude
 #define TL_EXPECTED_MSVC2015
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+/// \exclude
 #define TL_EXPECTED_GCC49
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4)
+/// \exclude
 #define TL_EXPECTED_GCC54
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
      !defined(__clang__))
 // GCC < 5 doesn't support overloading on const&& for member functions
+/// \exclude
 #define TL_EXPECTED_NO_CONSTRR
 
 // GCC < 5 doesn't support some standard C++11 type traits
+/// \exclude
 #define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::has_trivial_copy_constructor<T>::value
+/// \exclude
 #define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
 
 // This one will be different for GCC 5.7 if it's ever supported
+/// \exclude
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #else
+/// \exclude
 #define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::is_trivially_copy_constructible<T>::value
+/// \exclude
 #define IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
   std::is_trivially_copy_assignable<T>::value
+/// \exclude
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #endif
 
 #if __cplusplus > 201103L
+/// \exclude
 #define TL_EXPECTED_CXX14
 #endif
 

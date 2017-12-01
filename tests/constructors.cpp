@@ -19,6 +19,18 @@ TEST_CASE("Constructors", "[constructors]") {
     }
 
     {
+        tl::expected<int,int> e = tl::make_unexpected(0);
+        REQUIRE(!e);
+        REQUIRE(e.error() == 0);
+    }
+
+    {
+        tl::expected<int,int> e (tl::unexpect, 0);
+        REQUIRE(!e);
+        REQUIRE(e.error() == 0);
+    }
+
+    {
         tl::expected<int,int> e (tl::in_place, 42);
         REQUIRE(e);
         REQUIRE(e == 42);

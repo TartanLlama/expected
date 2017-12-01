@@ -14,6 +14,9 @@
 #ifndef TL_EXPECTED_HPP
 #define TL_EXPECTED_HPP
 
+#define TL_EXPECTED_VERSION_MAJOR 0
+#define TL_EXPECTED_VERSION_MINOR 1
+
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -21,38 +24,49 @@
 #include <utility>
 
 #if (defined(_MSC_VER) && _MSC_VER == 1900)
+/// \exclude
 #define TL_EXPECTED_MSVC2015
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+/// \exclude
 #define TL_EXPECTED_GCC49
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4)
+/// \exclude
 #define TL_EXPECTED_GCC54
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
      !defined(__clang__))
 // GCC < 5 doesn't support overloading on const&& for member functions
+/// \exclude
 #define TL_EXPECTED_NO_CONSTRR
 
 // GCC < 5 doesn't support some standard C++11 type traits
+/// \exclude
 #define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::has_trivial_copy_constructor<T>::value
+/// \exclude
 #define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>::value
 
 // This one will be different for GCC 5.7 if it's ever supported
+/// \exclude
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #else
+/// \exclude
 #define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::is_trivially_copy_constructible<T>::value
+/// \exclude
 #define IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
   std::is_trivially_copy_assignable<T>::value
+/// \exclude
 #define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #endif
 
 #if __cplusplus > 201103L
+/// \exclude
 #define TL_EXPECTED_CXX14
 #endif
 
@@ -69,7 +83,8 @@
 namespace tl {
 template <class T, class E> class expected;
 
-#ifndef TL_OPTIONAL_EXPECTED_MUTEX
+#ifndef TL_MONOSTATE_INPLACE_MUTEX
+#define TL_MONOSTATE_INPLACE_MUTEX
 /// \brief Used to represent an expected with no data
 class monostate {};
 
@@ -156,7 +171,8 @@ static constexpr unexpect_t unexpect{};
 
 /// \exclude
 namespace detail {
-#ifndef TL_OPTIONAL_EXPECTED_MUTEX
+#ifndef TL_TRAITS_MUTEX
+#define TL_TRAITS_MUTEX
 // C++14-style aliases for brevity
 template <class T> using remove_const_t = typename std::remove_const<T>::type;
 template <class T>
@@ -240,6 +256,9 @@ using expected_enable_from_other = detail::enable_if_t<
 
 /// \exclude
 namespace detail {
+struct no_init_t{};
+static constexpr no_init_t no_init{};
+
 // Implements the storage of the values, and ensures that the destructor is
 // trivial if it can be.
 //
@@ -250,6 +269,7 @@ template <class T, class E, bool = std::is_trivially_destructible<T>::value,
           bool = std::is_trivially_destructible<E>::value>
 struct expected_storage_base {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -295,6 +315,7 @@ struct expected_storage_base {
 // so the destructor of the `expected` can be trivial.
 template <class T, class E> struct expected_storage_base<T, E, true, true> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -333,6 +354,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
 // T is trivial, E is not.
 template <class T, class E> struct expected_storage_base<T, E, true, false> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -376,6 +398,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
 // E is trivial, T is not.
 template <class T, class E> struct expected_storage_base<T, E, false, true> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -579,7 +602,8 @@ struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;
 
   expected_copy_base() = default;
-  expected_copy_base(const expected_copy_base &rhs) {
+  expected_copy_base(const expected_copy_base &rhs) :
+      expected_operations_base<T,E>(no_init) {
     if (rhs.has_value()) {
       this->construct(rhs.get());
     } else {
@@ -614,7 +638,8 @@ struct expected_move_base<T, E, false> : expected_copy_base<T, E> {
   expected_move_base(const expected_move_base &rhs) = default;
 
   expected_move_base(expected_move_base &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value) {
+      std::is_nothrow_move_constructible<T>::value) :
+          expected_copy_base<T,E>(no_init) {
     if (rhs.has_value()) {
       this->construct(std::move(rhs.get()));
     } else {
@@ -900,8 +925,8 @@ public:
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
   /// `std::expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
-  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
-  /// and_then(F &&f) &;
+  /// is returned.
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F> TL_EXPECTED_11_CONSTEXPR auto and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T &>;
     static_assert(detail::is_expected<result>::value,
@@ -954,8 +979,8 @@ public:
   /// of `std::invoke(std::forward<F>(f), value())`. Returns a
   /// `std::expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
-  /// is returned. \group and_then \synopsis template <class F>\nconstexpr auto
-  /// and_then(F &&f) &;
+  /// is returned.
+  /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR detail::invoke_result_t<F, T &> and_then(F &&f) & {
     using result = detail::invoke_result_t<F, T &>;
@@ -1516,44 +1541,77 @@ public:
     }
   }
 
+  /// \returns a pointer to the stored value
+  /// \requires a value is stored
+  /// \group pointer
   constexpr const T *operator->() const { return valptr(); }
+  /// \group pointer
   TL_EXPECTED_11_CONSTEXPR T *operator->() { return valptr(); }
+
+  /// \returns the stored value
+  /// \requires a value is stored
+  /// \group deref
   constexpr const T &operator*() const & { return val(); }
+  /// \group deref
   TL_EXPECTED_11_CONSTEXPR T &operator*() & { return val(); }
+  /// \group deref
   constexpr const T &&operator*() const && { return std::move(val()); }
+  /// \group deref
   TL_EXPECTED_11_CONSTEXPR T &&operator*() && { return std::move(val()); }
-  constexpr explicit operator bool() const noexcept { return this->m_has_val; }
+
+  /// \returns whether or not the optional has a value
+  /// \group has_value
   constexpr bool has_value() const noexcept { return this->m_has_val; }
+  /// \group has_value
+  constexpr explicit operator bool() const noexcept { return this->m_has_val; }
+
+
+  /// \returns the contained value if there is one, otherwise throws [bad_expected_access]
+  /// \group value
   constexpr const T &value() const & {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return val();
   }
+  /// \group value
   TL_EXPECTED_11_CONSTEXPR T &value() & {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return val();
   }
+  /// \group value
   constexpr const T &&value() const && {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return std::move(val());
   }
+  /// \group value
   TL_EXPECTED_11_CONSTEXPR T &&value() && {
     if (!has_value())
-      throw bad_expected_access<E>(err());
+      throw bad_expected_access<E>(err().value());
     return std::move(val());
   }
+
+  /// \returns the unexpected value
+  /// \requires there is an unexpected value
+  /// \group error
   constexpr const E &error() const & { return err().value(); }
+  /// \group error
   TL_EXPECTED_11_CONSTEXPR E &error() & { return err().value(); }
+  /// \group error
   constexpr const E &&error() const && { return std::move(err().value()); }
+  /// \group error
   TL_EXPECTED_11_CONSTEXPR E &&error() && { return std::move(err().value()); }
+
+  /// \returns the stored value if there is one, otherwise returns `u`
+  /// \group value_or
   template <class U> constexpr T value_or(U &&v) const & {
     static_assert(std::is_copy_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,
                   "T must be copy-constructible and convertible to from U&&");
     return bool(*this) ? **this : static_cast<T>(std::forward<U>(v));
   }
+  /// \group value_or
   template <class U> TL_EXPECTED_11_CONSTEXPR T value_or(U &&v) && {
     static_assert(std::is_move_constructible<T>::value &&
                       std::is_convertible<U &&, T>::value,

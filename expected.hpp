@@ -590,13 +590,13 @@ struct expected_operations_base : expected_storage_base<T, E> {
 };
 
 // This class manages conditionally having a trivial copy constructor
-// This specialization is for when T is trivially copy constructible
+// This specialization is for when T and E are trivially copy constructible
 template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) && IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E)>
 struct expected_copy_base : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;
 };
 
-// This specialization is for when T is not trivially copy constructible
+// This specialization is for when T or E are not trivially copy constructible
 template <class T, class E>
 struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;

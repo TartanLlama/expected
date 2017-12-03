@@ -2,6 +2,8 @@
 #include "expected.hpp"
 
 #include <vector>
+#include <type_traits>
+#include <string>
 
 struct takes_init_and_variadic {
     std::vector<int> v;

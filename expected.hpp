@@ -705,7 +705,7 @@ struct expected_move_assign_base<T, E, false>
   operator=(const expected_move_assign_base &rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {
-    this->assign(std::move(rhs));
+    this->assign(rhs);
     return *this;
   }
   expected_move_assign_base &

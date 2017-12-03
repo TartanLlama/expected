@@ -591,7 +591,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
 
 // This class manages conditionally having a trivial copy constructor
 // This specialization is for when T is trivially copy constructible
-template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
+template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) && IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E)>
 struct expected_copy_base : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;
 };
@@ -612,7 +612,15 @@ struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
   }
 
   expected_copy_base(expected_copy_base &&rhs) = default;
-  expected_copy_base &operator=(const expected_copy_base &rhs) = default;
+  expected_copy_base &operator=(const expected_copy_base &rhs) {
+	  if (rhs.has_value()) {
+		  this->construct(rhs.get());
+	  }
+	  else {
+		  this->construct_error(rhs.geterr());
+	  }
+	  return *this;
+  }
   expected_copy_base &operator=(expected_copy_base &&rhs) = default;
 };
 
@@ -718,7 +726,7 @@ template <class T, class E,
           bool EnableCopy = (std::is_copy_constructible<T>::value &&
                              std::is_copy_constructible<E>::value),
           bool EnableMove = (std::is_move_constructible<T>::value &&
-                             std::is_move_constructible<T>::value)>
+                             std::is_move_constructible<E>::value)>
 struct expected_delete_ctor_base {
   expected_delete_ctor_base() = default;
   expected_delete_ctor_base(const expected_delete_ctor_base &) = default;

@@ -921,9 +921,9 @@ public:
   /// \group and_then
   /// Carries out some operation which returns an expected on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
-  /// returns a `std::expected<U>` for some `U`. \returns Let `U` be the result
-  /// of `std::invoke(std::forward<F>(f), value())`. Returns a
-  /// `std::expected<U>`. The return value is empty if `*this` is empty,
+  /// returns an `expected<U>` for some `U`. \returns Let `U` be the result
+  /// of `std::invoke(std::forward<F>(f), value())`. Returns an
+  /// `expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
   /// is returned.
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
@@ -975,9 +975,9 @@ public:
   /// \group and_then
   /// Carries out some operation which returns an expected on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
-  /// returns a `std::expected<U>` for some `U`. \returns Let `U` be the result
-  /// of `std::invoke(std::forward<F>(f), value())`. Returns a
-  /// `std::expected<U>`. The return value is empty if `*this` is empty,
+  /// returns an `expected<U>` for some `U`. \returns Let `U` be the result
+  /// of `std::invoke(std::forward<F>(f), value())`. Returns an
+  /// `expected<U>`. The return value is empty if `*this` is empty,
   /// otherwise the return value of `std::invoke(std::forward<F>(f), value())`
   /// is returned.
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
@@ -1034,7 +1034,8 @@ public:
     !defined(TL_EXPECTED_GCC54)
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<U,E>`. If `*this` is unexpected, the
+  /// value())`. If `U` is `void`, returns an `expected<monostate,E>, otherwise
+  //  returns an `expected<U,E>`. If `*this` is unexpected, the
   /// result is `*this`, otherwise an `expected<U,E>` is constructed from the
   /// return value of `std::invoke(std::forward<F>(f), value())` and is
   /// returned.
@@ -1065,7 +1066,8 @@ public:
 #else
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<U,E>`. If `*this` is unexpected, the
+  /// value())`. If `U` is `void`, returns an `expected<monostate,E>, otherwise
+  //  returns an `expected<U,E>`. If `*this` is unexpected, the
   /// result is `*this`, otherwise an `expected<U,E>` is constructed from the
   /// return value of `std::invoke(std::forward<F>(f), value())` and is
   /// returned.
@@ -1114,7 +1116,8 @@ public:
   /// \brief Carries out some operation on the stored unexpected object if there
   /// is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<T,U>`. If `*this` has an expected
+  /// value())`. If `U` is `void`, returns an `expected<T,monostate>`, otherwise
+  /// returns an `expected<T,U>`. If `*this` has an expected
   /// value, the result is `*this`, otherwise an `expected<T,U>` is constructed
   /// from `make_unexpected(std::invoke(std::forward<F>(f), value()))` and is
   /// returned.
@@ -1146,7 +1149,7 @@ public:
   /// \brief Carries out some operation on the stored unexpected object if there
   /// is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. Returns a `std::expected<T,U>`. If `*this` has an expected
+  /// value())`. Returns an `expected<T,U>`. If `*this` has an expected
   /// value, the result is `*this`, otherwise an `expected<T,U>` is constructed
   /// from `make_unexpected(std::invoke(std::forward<F>(f), value()))` and is
   /// returned.
@@ -1622,6 +1625,7 @@ public:
 
 /// \exclude
 namespace detail {
+template <class Exp> using exp_t = typename detail::decay_t<Exp>::error_type;
 template <class Exp> using err_t = typename detail::decay_t<Exp>::error_type;
 template <class Exp, class Ret> using ret_t = expected<Ret, err_t<Exp>>;
 
@@ -1683,25 +1687,56 @@ auto map_impl(Exp &&exp, F &&f) -> expected<monostate, err_t<Exp>> {
     !defined(TL_EXPECTED_GCC54)
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>()))>
+                                              *std::declval<Exp>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 constexpr auto map_error_impl(Exp &&exp, F &&f) {
-  using result = ret_t<Exp, Ret>;
+  using result = expected<exp_t<Exp>, Ret>;
   return exp.has_value()
              ? result(*std::forward<Exp>(exp))
              : result(unexpect, detail::invoke(std::forward<F>(f),
                                                std::forward<Exp>(exp).error()));
 }
+template <class Exp, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Exp>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+constexpr auto map_error_impl(Exp &&exp, F &&f) {
+  using result = expected<exp_t<Exp>, monostate>;
+  if (exp.has_value()) {
+      return result(*std::forward<Exp>(exp));
+  }
+
+  detail::invoke(std::forward<F>(f),
+                 std::forward<Exp>(exp).error());
+  return result(unexpect, monostate{});
+}
 #else
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>()))>
-constexpr auto map_error_impl(Exp &&exp, F &&f) -> ret_t<Exp, Ret> {
+                                              *std::declval<Exp>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+constexpr auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, Ret> {
   using result = ret_t<Exp, Ret>;
 
   return exp.has_value()
              ? result(*std::forward<Exp>(exp))
              : result(unexpect, detail::invoke(std::forward<F>(f),
                                                std::forward<Exp>(exp).error()));
+}
+
+template <class Exp, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>(),
+                                              *std::declval<Exp>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+constexpr auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, monostate> {
+  using result = expected<exp_t<Exp>, monostate>;
+  if (exp.has_value()) {
+      return result(*std::forward<Exp>(exp));
+  }
+
+  detail::invoke(std::forward<F>(f),
+                 std::forward<Exp>(exp).error());
+  return result(unexpect, monostate{});
 }
 #endif
 

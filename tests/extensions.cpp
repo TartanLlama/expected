@@ -191,6 +191,54 @@ TEST_CASE("Map error extensions", "[extensions.map_error]") {
     REQUIRE(!ret);
     REQUIRE(ret.error() == 42);
   }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.map_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.map_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).map_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).map_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.map_error(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.map_error(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).map_error(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).map_error(ret_void);
+    REQUIRE(!ret);
+  }
 }
 
 TEST_CASE("And then extensions", "[extensions.and_then]") {

@@ -710,14 +710,14 @@ struct expected_move_assign_base<T, E, false>
 
   expected_move_assign_base(expected_move_assign_base &&rhs) = default;
   expected_move_assign_base &
-  operator=(const expected_move_assign_base &rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value
-          &&std::is_nothrow_move_assignable<T>::value) {
-    this->assign(rhs);
-    return *this;
-  }
+  operator=(const expected_move_assign_base &rhs) = default;
   expected_move_assign_base &
-  operator=(expected_move_assign_base &&rhs) = default;
+  operator=(expected_move_assign_base &&rhs) noexcept(
+		  std::is_nothrow_move_constructible<T>::value
+		  &&std::is_nothrow_move_assignable<T>::value) {
+	  this->assign(std::move(rhs));
+	  return *this;
+  }
 };
 
 // expected_delete_ctor_base will conditionally delete copy and move

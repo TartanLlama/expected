@@ -158,8 +158,8 @@ constexpr bool operator>=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
 /// *Example:*
 /// auto e1 = tl::make_unexpected(42);
 /// unexpected<int> e2 (42); //same semantics
-template <class E> unexpected<E> make_unexpected(E &&e) {
-  return unexpected<E>(std::forward<E>(e));
+template <class E> unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
+  return unexpected<typename std::decay<E>::type>(std::forward<E>(e));
 }
 
 /// \brief A tag type to tell expected to construct the unexpected value

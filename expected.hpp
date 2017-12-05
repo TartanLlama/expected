@@ -590,13 +590,13 @@ struct expected_operations_base : expected_storage_base<T, E> {
 };
 
 // This class manages conditionally having a trivial copy constructor
-// This specialization is for when T is trivially copy constructible
-template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>
+// This specialization is for when T and E are trivially copy constructible
+template <class T, class E, bool = IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) && IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E)>
 struct expected_copy_base : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;
 };
 
-// This specialization is for when T is not trivially copy constructible
+// This specialization is for when T or E are not trivially copy constructible
 template <class T, class E>
 struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;
@@ -623,7 +623,8 @@ struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
 // move constructible
 #ifndef TL_EXPECTED_GCC49
 template <class T, class E,
-          bool = std::is_trivially_move_constructible<T>::value>
+          bool = std::is_trivially_move_constructible<T>::value
+          && std::is_trivially_move_constructible<E>::value>
 struct expected_move_base : expected_copy_base<T, E> {
   using expected_copy_base<T, E>::expected_copy_base;
 };
@@ -654,7 +655,10 @@ struct expected_move_base<T, E, false> : expected_copy_base<T, E> {
 template <class T, class E,
           bool = IS_TRIVIALLY_COPY_ASSIGNABLE(T) &&
                  IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T) &&
-                 IS_TRIVIALLY_DESTRUCTIBLE(T)>
+                 IS_TRIVIALLY_DESTRUCTIBLE(T) &&
+                 IS_TRIVIALLY_COPY_ASSIGNABLE(E) &&
+                 IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E) &&
+                 IS_TRIVIALLY_DESTRUCTIBLE(E)>
 struct expected_copy_assign_base : expected_move_base<T, E> {
   using expected_move_base<T, E>::expected_move_base;
 };
@@ -683,8 +687,11 @@ struct expected_copy_assign_base<T, E, false> : expected_move_base<T, E> {
 #ifndef TL_EXPECTED_GCC49
 template <class T, class E,
           bool = std::is_trivially_destructible<T>::value
-              &&std::is_trivially_move_constructible<T>::value
-                  &&std::is_trivially_move_assignable<T>::value>
+          &&std::is_trivially_move_constructible<T>::value
+          &&std::is_trivially_move_assignable<T>::value
+          &&std::is_trivially_destructible<E>::value
+          &&std::is_trivially_move_constructible<E>::value
+          &&std::is_trivially_move_assignable<E>::value>
 struct expected_move_assign_base : expected_copy_assign_base<T, E> {
   using expected_copy_assign_base<T, E>::expected_copy_assign_base;
 };
@@ -701,15 +708,17 @@ struct expected_move_assign_base<T, E, false>
   expected_move_assign_base(const expected_move_assign_base &rhs) = default;
 
   expected_move_assign_base(expected_move_assign_base &&rhs) = default;
+
   expected_move_assign_base &
-  operator=(const expected_move_assign_base &rhs) noexcept(
+  operator=(const expected_move_assign_base &rhs) = default;
+
+  expected_move_assign_base &
+  operator=(expected_move_assign_base &&rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {
-    this->assign(rhs);
+      this->assign(std::move(rhs));
     return *this;
   }
-  expected_move_assign_base &
-  operator=(expected_move_assign_base &&rhs) = default;
 };
 
 // expected_delete_ctor_base will conditionally delete copy and move
@@ -718,7 +727,7 @@ template <class T, class E,
           bool EnableCopy = (std::is_copy_constructible<T>::value &&
                              std::is_copy_constructible<E>::value),
           bool EnableMove = (std::is_move_constructible<T>::value &&
-                             std::is_move_constructible<T>::value)>
+                             std::is_move_constructible<E>::value)>
 struct expected_delete_ctor_base {
   expected_delete_ctor_base() = default;
   expected_delete_ctor_base(const expected_delete_ctor_base &) = default;

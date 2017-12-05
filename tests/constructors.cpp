@@ -2,6 +2,8 @@
 #include "expected.hpp"
 
 #include <vector>
+#include <type_traits>
+#include <string>
 
 struct takes_init_and_variadic {
     std::vector<int> v;
@@ -59,4 +61,63 @@ TEST_CASE("Constructors", "[constructors]") {
         REQUIRE(std::get<1>(e->t) == 3);
     }
 
+	{
+		tl::expected<int, int> e;
+		REQUIRE(std::is_default_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_constructible<decltype(e)>::value);
+		REQUIRE(std::is_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
+		REQUIRE(std::is_move_assignable<decltype(e)>::value);
+		REQUIRE(IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e)));
+		REQUIRE(IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e)));
+#	if !defined(TL_EXPECTED_GCC49)
+		REQUIRE(std::is_trivially_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_trivially_move_assignable<decltype(e)>::value);
+#	endif
+	}
+
+	{
+		tl::expected<int, std::string> e;
+		REQUIRE(std::is_default_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_constructible<decltype(e)>::value);
+		REQUIRE(std::is_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
+		REQUIRE(std::is_move_assignable<decltype(e)>::value);
+		REQUIRE(!IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e)));
+		REQUIRE(!IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e)));
+#	if !defined(TL_EXPECTED_GCC49)
+		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
+		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
+#	endif
+	}
+
+	{
+		tl::expected<std::string, int> e;
+		REQUIRE(std::is_default_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_constructible<decltype(e)>::value);
+		REQUIRE(std::is_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
+		REQUIRE(std::is_move_assignable<decltype(e)>::value);
+		REQUIRE(!IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e)));
+		REQUIRE(!IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e)));
+#	if !defined(TL_EXPECTED_GCC49)
+		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
+		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
+#	endif
+	}
+
+	{
+		tl::expected<std::string, std::string> e;
+		REQUIRE(std::is_default_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_constructible<decltype(e)>::value);
+		REQUIRE(std::is_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
+		REQUIRE(std::is_move_assignable<decltype(e)>::value);
+		REQUIRE(!IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e)));
+		REQUIRE(!IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e)));
+#	if !defined(TL_EXPECTED_GCC49)
+		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
+		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
+#	endif
+	}
 }

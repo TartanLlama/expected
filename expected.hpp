@@ -1635,7 +1635,7 @@ template <class Exp, class F,
                                               *std::declval<Exp>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 constexpr auto map_impl(Exp &&exp, F &&f) {
-  using result = ret_t<Exp, Ret>;
+  using result = ret_t<Exp, detail::decay_t<Ret>>;
   return exp.has_value() ? result(detail::invoke(std::forward<F>(f),
                                                  *std::forward<Exp>(exp)))
                          : result(unexpect, std::forward<Exp>(exp).error());
@@ -1660,8 +1660,8 @@ template <class Exp, class F,
                                               *std::declval<Exp>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 
-constexpr auto map_impl(Exp &&exp, F &&f) -> ret_t<Exp, Ret> {
-  using result = ret_t<Exp, Ret>;
+constexpr auto map_impl(Exp &&exp, F &&f) -> ret_t<Exp, detail::decay_t<Ret>> {
+  using result = ret_t<Exp, detail::decay_t<Ret>>;
 
   return exp.has_value() ? result(detail::invoke(std::forward<F>(f),
                                                  *std::forward<Exp>(exp)))
@@ -1690,7 +1690,7 @@ template <class Exp, class F,
                                               *std::declval<Exp>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 constexpr auto map_error_impl(Exp &&exp, F &&f) {
-  using result = expected<exp_t<Exp>, Ret>;
+  using result = expected<exp_t<Exp>, detail::decay_t<Ret>>;
   return exp.has_value()
              ? result(*std::forward<Exp>(exp))
              : result(unexpect, detail::invoke(std::forward<F>(f),
@@ -1715,8 +1715,8 @@ template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Exp>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
-constexpr auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, Ret> {
-  using result = ret_t<Exp, Ret>;
+constexpr auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, detail::decay_t<Ret>> {
+  using result = ret_t<Exp, detail::decay_t<Ret>>;
 
   return exp.has_value()
              ? result(*std::forward<Exp>(exp))

@@ -612,15 +612,7 @@ struct expected_copy_base<T, E, false> : expected_operations_base<T, E> {
   }
 
   expected_copy_base(expected_copy_base &&rhs) = default;
-  expected_copy_base &operator=(const expected_copy_base &rhs) {
-	  if (rhs.has_value()) {
-		  this->construct(rhs.get());
-	  }
-	  else {
-		  this->construct_error(rhs.geterr());
-	  }
-	  return *this;
-  }
+  expected_copy_base &operator=(const expected_copy_base &rhs) = default;
   expected_copy_base &operator=(expected_copy_base &&rhs) = default;
 };
 
@@ -721,7 +713,6 @@ struct expected_move_assign_base<T, E, false>
   operator=(const expected_move_assign_base &rhs) = default;
 
   expected_move_assign_base &
-
   operator=(expected_move_assign_base &&rhs) noexcept(
       std::is_nothrow_move_constructible<T>::value
           &&std::is_nothrow_move_assignable<T>::value) {

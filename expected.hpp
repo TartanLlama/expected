@@ -28,12 +28,14 @@
 #define TL_EXPECTED_MSVC2015
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9)
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
+     !defined(__clang__))
 /// \exclude
 #define TL_EXPECTED_GCC49
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4)
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 4 &&              \
+     !defined(__clang__))
 /// \exclude
 #define TL_EXPECTED_GCC54
 #endif

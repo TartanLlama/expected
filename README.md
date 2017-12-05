@@ -49,7 +49,7 @@ The interface is the same as `std::expected` as proposed in [p0323r3](http://www
   * `tl::expected<std::size_t,std::error_code> s = exp_string.map(&std::string::size);`
 - `map_error`: carries out some operation on the unexpected object if there is one.
   * `my_error_code translate_error (std::error_code);`
-  * `tl::expected<int,my_error_code> s = exp_int.map(translate_error);`
+  * `tl::expected<int,my_error_code> s = exp_int.map_error(translate_error);`
 - `and_then`: like `map`, but for operations which return a `tl::expected`.
   * `tl::expected<ast, fail_reason> parse (const std::string& s);`
   * `tl::expected<ast, fail_reason> exp_ast = exp_string.and_then(parse);`
@@ -81,6 +81,10 @@ Tested on:
 Requires [Standardese](https://github.com/foonathan/standardese) for generating documentation.
 
 Requires [Catch](https://github.com/philsquared/Catch) for testing. This is bundled in the test directory.
+
+### Acknowledgements
+
+Thanks to [Kévin Alexandre Boissonneault](https://github.com/KABoissonneault) for various bug fixes.
 
 ----------
 

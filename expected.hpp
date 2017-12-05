@@ -570,7 +570,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
 
   TL_EXPECTED_11_CONSTEXPR T &get() & { return this->m_val; }
   constexpr const T &get() const & { return this->m_val; }
-  TL_EXPECTED_11_CONSTEXPR T &&get() && { std::move(this->m_val); }
+  TL_EXPECTED_11_CONSTEXPR T &&get() && { return std::move(this->m_val); }
 #ifndef TL_EXPECTED_NO_CONSTRR
   constexpr const T &&get() const && { return std::move(this->m_val); }
 #endif

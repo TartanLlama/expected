@@ -82,6 +82,10 @@ Requires [Standardese](https://github.com/foonathan/standardese) for generating 
 
 Requires [Catch](https://github.com/philsquared/Catch) for testing. This is bundled in the test directory.
 
+### Acknowledgements
+
+Thanks to [Kévin Alexandre Boissonneault](https://github.com/KABoissonneault) for various bug fixes.
+
 ----------
 
 [![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png)]("http://creativecommons.org/publicdomain/zero/1.0/")

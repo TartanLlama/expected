@@ -130,6 +130,15 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
   }
+
+
+  // mapping functions which return references
+  {
+    tl::expected<int, int> e(42);
+    auto ret = e.map([](int& i) -> int& { return i; });
+    REQUIRE(ret);
+    REQUIRE(ret == 42);
+  }
 }
 
 TEST_CASE("Map error extensions", "[extensions.map_error]") {
@@ -239,6 +248,7 @@ TEST_CASE("Map error extensions", "[extensions.map_error]") {
     auto ret = std::move(e).map_error(ret_void);
     REQUIRE(!ret);
   }
+
 }
 
 TEST_CASE("And then extensions", "[extensions.and_then]") {

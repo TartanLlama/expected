@@ -72,6 +72,12 @@
 #define TL_EXPECTED_CXX14
 #endif
 
+#ifdef TL_EXPECTED_GCC49
+#define TL_EXPECTED_GCC49_CONSTEXPR
+#else
+#define TL_EXPECTED_GCC49_CONSTEXPR constexpr
+#endif
+
 #if (__cplusplus == 201103L || defined(TL_EXPECTED_MSVC2015) ||                \
      defined(TL_EXPECTED_GCC49)) &&                                            \
     !defined(TL_EXPECTED_GCC54)
@@ -1582,7 +1588,7 @@ public:
 
   /// \returns the contained value if there is one, otherwise throws [bad_expected_access]
   /// \group value
-  constexpr const T &value() const & {
+  TL_EXPECTED_GCC49_CONSTEXPR const T &value() const & {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return val();
@@ -1594,7 +1600,7 @@ public:
     return val();
   }
   /// \group value
-  constexpr const T &&value() const && {
+  TL_EXPECTED_GCC49_CONSTEXPR const T &&value() const && {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return std::move(val());

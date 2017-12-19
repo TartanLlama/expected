@@ -999,8 +999,9 @@ public:
   /// is returned.
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F>
-  TL_EXPECTED_11_CONSTEXPR detail::invoke_result_t<F, T &> and_then(F &&f) & {
-    using result = detail::invoke_result_t<F, T &>;
+  TL_EXPECTED_11_CONSTEXPR auto and_then(F &&f) &
+      -> decltype(detail::invoke(std::forward<F>(f), std::declval<T&>())) {
+    using result = decltype(detail::invoke(std::forward<F>(f), **this));
     static_assert(detail::is_expected<result>::value,
                   "F must return an expected");
 
@@ -1011,20 +1012,22 @@ public:
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &&;
   template <class F>
-  TL_EXPECTED_11_CONSTEXPR detail::invoke_result_t<F, T &&> and_then(F &&f) && {
-    using result = detail::invoke_result_t<F, T &&>;
+  TL_EXPECTED_11_CONSTEXPR auto and_then(F &&f) &&
+        -> decltype(detail::invoke(std::forward<F>(f), std::declval<T&&>())) {
+    using result = decltype(detail::invoke(std::forward<F>(f), std::move(**this)));
     static_assert(detail::is_expected<result>::value,
                   "F must return an expected");
 
-    return has_value() ? detail::invoke(std::forward<F>(f), **this)
+    return has_value() ? detail::invoke(std::forward<F>(f), std::move(**this))
                        : result(unexpect, std::move(this->error()));
   }
 
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &;
   template <class F>
-  constexpr detail::invoke_result_t<F, const T &> and_then(F &&f) const & {
-    using result = detail::invoke_result_t<F, const T &>;
+  constexpr auto and_then(F &&f) const &
+      -> decltype(detail::invoke(std::forward<F>(f), std::declval<const T&>())) {
+      using result = decltype(detail::invoke(std::forward<F>(f), **this));
     static_assert(detail::is_expected<result>::value,
                   "F must return an expected");
 
@@ -1036,8 +1039,9 @@ public:
   /// \group and_then
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
   template <class F>
-  constexpr detail::invoke_result_t<F, const T &&> and_then(F &&f) const && {
-    using result = detail::invoke_result_t<F, const T &&>;
+  constexpr auto and_then(F &&f) const &&
+      -> decltype(detail::invoke(std::forward<F>(f), std::declval<const T&&>())) {
+    using result = decltype(detail::invoke(std::forward<F>(f), std::move(**this)));
     static_assert(detail::is_expected<result>::value,
                   "F must return an expected");
 

@@ -12,6 +12,7 @@ set(TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests/main.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/extensions.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/assignment.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/emplace.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/issues.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/bases.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/observers.cpp
                  ${CMAKE_CURRENT_SOURCE_DIR}/tests/constructors.cpp)

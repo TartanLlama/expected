@@ -1393,7 +1393,7 @@ public:
       class U = T,
       detail::enable_if_t<std::is_convertible<U &&, T>::value> * = nullptr,
       detail::expected_enable_forward_value<T, E, U> * = nullptr>
-  constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
+  TL_EXPECTED_MSVC2015_CONSTEXPR expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
   template <
       class U = T,

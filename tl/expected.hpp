@@ -78,6 +78,12 @@
 #define TL_EXPECTED_GCC49_CONSTEXPR constexpr
 #endif
 
+#ifdef TL_EXPECTED_MSVC2015_CONSTEXPR
+#define TL_EXPECTED_MSVC2015_CONSTEXPR
+#else
+#define TL_EXPECTED_MSVC2015_CONSTEXPR constexpr
+#endif
+
 #if (__cplusplus == 201103L || defined(TL_EXPECTED_MSVC2015) ||                \
      defined(TL_EXPECTED_GCC49)) &&                                            \
     !defined(TL_EXPECTED_GCC54)
@@ -1380,7 +1386,7 @@ public:
       class U = T,
       detail::enable_if_t<!std::is_convertible<U &&, T>::value> * = nullptr,
       detail::expected_enable_forward_value<T, E, U> * = nullptr>
-  explicit constexpr expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
+  explicit TL_EXPECTED_MSVC2015_CONSTEXPR expected(U &&v) : expected(in_place, std::forward<U>(v)) {}
 
   /// \exclude
   template <

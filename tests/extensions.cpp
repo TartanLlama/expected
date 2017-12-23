@@ -72,7 +72,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = e.map(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
   {
@@ -80,7 +80,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = e.map(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
   {
@@ -88,7 +88,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = std::move(e).map(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
   {
@@ -96,7 +96,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = std::move(e).map(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
   {
@@ -104,7 +104,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = e.map(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
   {
@@ -112,7 +112,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = e.map(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
   {
@@ -120,7 +120,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = std::move(e).map(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
   {
@@ -128,7 +128,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
     auto ret = std::move(e).map(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
-        (std::is_same<decltype(ret), tl::expected<tl::monostate, int>>::value));
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
   }
 
 

@@ -120,4 +120,15 @@ TEST_CASE("Constructors", "[constructors]") {
 		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
 #	endif
 	}
+
+    {
+        tl::expected<void,int> e;
+        REQUIRE(e);
+    }
+
+    {
+        tl::expected<void,int> e (tl::unexpect, 42);
+        REQUIRE(!e);
+        REQUIRE(e.error() == 42);
+    }
 }

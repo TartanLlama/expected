@@ -25,6 +25,9 @@
 #if (defined(_MSC_VER) && _MSC_VER == 1900)
 /// \exclude
 #define TL_EXPECTED_MSVC2015
+#define TL_EXPECTED_MSVC2015_CONSTEXPR
+#else
+#define TL_EXPECTED_MSVC2015_CONSTEXPR constexpr
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
@@ -458,7 +461,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 
 // `T` is `void`, `E` is trivially-destructible
 template <class E> struct expected_storage_base<void, E, false, true> {
-  constexpr expected_storage_base() : m_has_val(true) {}
+  TL_EXPECTED_MSVC2015_CONSTEXPR expected_storage_base() : m_has_val(true) {}
   constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
 
   constexpr expected_storage_base(in_place_t) : m_has_val(true) {}

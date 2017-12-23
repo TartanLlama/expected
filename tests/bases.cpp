@@ -16,9 +16,7 @@ TEST_CASE("Triviality", "[bases.triviality]") {
     REQUIRE(std::is_trivially_destructible<tl::expected<int,int>>::value);
 
     REQUIRE(std::is_trivially_copy_constructible<tl::expected<void,int>>::value);
-    REQUIRE(std::is_trivially_copy_assignable<tl::expected<void,int>>::value);
     REQUIRE(std::is_trivially_move_constructible<tl::expected<void,int>>::value);
-    REQUIRE(std::is_trivially_move_assignable<tl::expected<void,int>>::value);
     REQUIRE(std::is_trivially_destructible<tl::expected<void,int>>::value);
 
 

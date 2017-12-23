@@ -15,7 +15,7 @@
 #define TL_EXPECTED_HPP
 
 #define TL_EXPECTED_VERSION_MAJOR 0
-#define TL_EXPECTED_VERSION_MINOR 1
+#define TL_EXPECTED_VERSION_MINOR 2
 
 #include <exception>
 #include <functional>

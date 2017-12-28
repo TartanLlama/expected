@@ -686,11 +686,12 @@ struct expected_operations_base<void,E> : expected_storage_base<void, E> {
     this->m_has_val = true;
   }
 
+  // This function doesn't use its argument, but needs it so that code in
+  // levels above this can work independently of whether T is void
   template <class Rhs>
-  void construct_with(Rhs && rhs) noexcept {
+  void construct_with(Rhs &&) noexcept {
       this->m_has_val = true;
   }
-
 
   template <class... Args> void construct_error(Args &&... args) noexcept {
     new (std::addressof(this->m_unexpect))
@@ -2055,38 +2056,6 @@ constexpr bool operator!=(const expected<T, E> &x, const unexpected<E> &e) {
 template <class T, class E>
 constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
   return x.has_value() ? false : x.error() != e.value();
-}
-template <class T, class E>
-constexpr bool operator<(const expected<T, E> &x, const unexpected<E> &e) {
-  return false;
-}
-template <class T, class E>
-constexpr bool operator<(const unexpected<E> &e, const expected<T, E> &x) {
-  return x.has_value();
-}
-template <class T, class E>
-constexpr bool operator<=(const expected<T, E> &x, const unexpected<E> &e) {
-  return !x.has_value();
-}
-template <class T, class E>
-constexpr bool operator<=(const unexpected<E> &e, const expected<T, E> &x) {
-  return true;
-}
-template <class T, class E>
-constexpr bool operator>(const expected<T, E> &x, const unexpected<E> &e) {
-  return x.has_value();
-}
-template <class T, class E>
-constexpr bool operator>(const unexpected<E> &e, const expected<T, E> &x) {
-  return false;
-}
-template <class T, class E>
-constexpr bool operator>=(const expected<T, E> &x, const unexpected<E> &e) {
-  return true;
-}
-template <class T, class E>
-constexpr bool operator>=(const unexpected<E> &e, const expected<T, E> &x) {
-  return !x.has_value();
 }
 
 // TODO is_swappable

@@ -325,11 +325,11 @@ struct expected_storage_base {
       m_unexpect.~unexpected<E>();
     }
   }
-  bool m_has_val;
   union {
     T m_val;
     unexpected<E> m_unexpect;
   };
+  bool m_has_val;
 };
 
 // This specialization is for when both `T` and `E` are trivially-destructible,
@@ -365,11 +365,11 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
       : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() = default;
-  bool m_has_val;
   union {
     T m_val;
     unexpected<E> m_unexpect;
   };
+  bool m_has_val;
 };
 
 // T is trivial, E is not.
@@ -409,11 +409,11 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
     }
   }
 
-  bool m_has_val;
   union {
     T m_val;
     unexpected<E> m_unexpect;
   };
+  bool m_has_val;
 };
 
 // E is trivial, T is not.
@@ -452,11 +452,11 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
       m_val.~T();
     }
   }
-  bool m_has_val;
   union {
     T m_val;
     unexpected<E> m_unexpect;
   };
+  bool m_has_val;
 };
 
 // `T` is `void`, `E` is trivially-destructible
@@ -481,12 +481,12 @@ template <class E> struct expected_storage_base<void, E, false, true> {
       : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() = default;
-  bool m_has_val;
   struct dummy {};
   union {
     dummy m_val;
     unexpected<E> m_unexpect;
   };
+  bool m_has_val;
 };
 
 // `T` is `void`, `E` is not trivially-destructible
@@ -516,12 +516,12 @@ template <class E> struct expected_storage_base<void, E, false, false> {
     }
   }
 
-  bool m_has_val;
   struct dummy {};
   union {
     dummy m_val;
     unexpected<E> m_unexpect;
   };
+  bool m_has_val;
 };
 
 // This base class provides some handy member functions which can be used in

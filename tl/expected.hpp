@@ -1965,32 +1965,6 @@ constexpr bool operator!=(const expected<T, E> &lhs,
              ? true
              : (!lhs.has_value() ? lhs.error() != rhs.error() : *lhs != *rhs);
 }
-template <class T, class E, class U, class F>
-constexpr bool operator<(const expected<T, E> &lhs, const expected<U, F> &rhs) {
-  return (lhs.has_value() != rhs.has_value())
-             ? (!lhs.has_value() ? true : false)
-             : (!lhs.has_value() ? lhs.error() < rhs.error() : *lhs < *rhs);
-}
-template <class T, class E, class U, class F>
-constexpr bool operator>(const expected<T, E> &lhs, const expected<U, F> &rhs) {
-  return (lhs.has_value() != rhs.has_value())
-             ? (!lhs.has_value() ? false : true)
-             : (!lhs.has_value() ? lhs.error() > rhs.error() : *lhs > *rhs);
-}
-template <class T, class E, class U, class F>
-constexpr bool operator<=(const expected<T, E> &lhs,
-                          const expected<U, F> &rhs) {
-  return (lhs.has_value() != rhs.has_value())
-             ? (!lhs.has_value() ? false : true)
-             : (!lhs.has_value() ? lhs.error() <= rhs.error() : *lhs <= *rhs);
-}
-template <class T, class E, class U, class F>
-constexpr bool operator>=(const expected<T, E> &lhs,
-                          const expected<U, F> &rhs) {
-  return (lhs.has_value() != rhs.has_value())
-             ? (!lhs.has_value() ? true : false)
-             : (!lhs.has_value() ? lhs.error() >= rhs.error() : *lhs >= *rhs);
-}
 
 template <class T, class E, class U>
 constexpr bool operator==(const expected<T, E> &x, const U &v) {
@@ -2007,38 +1981,6 @@ constexpr bool operator!=(const expected<T, E> &x, const U &v) {
 template <class T, class E, class U>
 constexpr bool operator!=(const U &v, const expected<T, E> &x) {
   return x.has_value() ? *x != v : true;
-}
-template <class T, class E, class U>
-constexpr bool operator<(const expected<T, E> &x, const U &v) {
-  return x.has_value() ? *x < v : true;
-}
-template <class T, class E, class U>
-constexpr bool operator<(const U &v, const expected<T, E> &x) {
-  return x.has_value() ? v < *x : false;
-}
-template <class T, class E, class U>
-constexpr bool operator<=(const expected<T, E> &x, const U &v) {
-  return x.has_value() ? *x <= v : true;
-}
-template <class T, class E, class U>
-constexpr bool operator<=(const U &v, const expected<T, E> &x) {
-  return x.has_value() ? v <= *x : false;
-}
-template <class T, class E, class U>
-constexpr bool operator>(const expected<T, E> &x, const U &v) {
-  return x.has_value() ? *x > v : false;
-}
-template <class T, class E, class U>
-constexpr bool operator>(const U &v, const expected<T, E> &x) {
-  return x.has_value() ? v > *x : true;
-}
-template <class T, class E, class U>
-constexpr bool operator>=(const expected<T, E> &x, const U &v) {
-  return x.has_value() ? *x >= v : false;
-}
-template <class T, class E, class U>
-constexpr bool operator>=(const U &v, const expected<T, E> &x) {
-  return x.has_value() ? v >= *x : true;
 }
 
 template <class T, class E>

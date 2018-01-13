@@ -1985,19 +1985,19 @@ constexpr bool operator!=(const U &v, const expected<T, E> &x) {
 
 template <class T, class E>
 constexpr bool operator==(const expected<T, E> &x, const unexpected<E> &e) {
-  return x.has_value() ? true : x.error() == e.value();
+  return x.has_value() ? false : x.error() == e.value();
 }
 template <class T, class E>
 constexpr bool operator==(const unexpected<E> &e, const expected<T, E> &x) {
-  return x.has_value() ? true : x.error() == e.value();
+  return x.has_value() ? false : x.error() == e.value();
 }
 template <class T, class E>
 constexpr bool operator!=(const expected<T, E> &x, const unexpected<E> &e) {
-  return x.has_value() ? false : x.error() != e.value();
+  return x.has_value() ? true : x.error() != e.value();
 }
 template <class T, class E>
 constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
-  return x.has_value() ? false : x.error() != e.value();
+  return x.has_value() ? true : x.error() != e.value();
 }
 
 // TODO is_swappable

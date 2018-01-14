@@ -50,23 +50,23 @@
 
 // GCC < 5 doesn't support some standard C++11 type traits
 /// \exclude
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+#define TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::has_trivial_copy_constructor<T>
 /// \exclude
-#define IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>
+#define TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(T) std::has_trivial_copy_assign<T>
 
 // This one will be different for GCC 5.7 if it's ever supported
 /// \exclude
-#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>
+#define TL_EXPECTED_IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>
 #else
 /// \exclude
-#define IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+#define TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
   std::is_trivially_copy_constructible<T>
 /// \exclude
-#define IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
+#define TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
   std::is_trivially_copy_assignable<T>
 /// \exclude
-#define IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>
+#define TL_EXPECTED_IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>
 #endif
 
 #if __cplusplus > 201103L
@@ -735,8 +735,8 @@ struct expected_operations_base<void,E> : expected_storage_base<void, E> {
 // This class manages conditionally having a trivial copy constructor
 // This specialization is for when T and E are trivially copy constructible
 template <class T, class E,
-          bool = is_void_or<T,IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>::value &&
-          IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E)::value>
+          bool = is_void_or<T,TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)>::value &&
+          TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E)::value>
 struct expected_copy_base : expected_operations_base<T, E> {
   using expected_operations_base<T, E>::expected_operations_base;
 };
@@ -800,11 +800,11 @@ struct expected_move_base<T, E, false> : expected_copy_base<T, E> {
 template <
     class T, class E,
     bool = is_void_or<T,
-                       conjunction<IS_TRIVIALLY_COPY_ASSIGNABLE(T),
-                                   IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T),
-                                   IS_TRIVIALLY_DESTRUCTIBLE(T)>>::value &&
-                       IS_TRIVIALLY_COPY_ASSIGNABLE(E)::value &&
-                       IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E)::value && IS_TRIVIALLY_DESTRUCTIBLE(E)::value>
+                       conjunction<TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(T),
+                                   TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T),
+                                   TL_EXPECTED_IS_TRIVIALLY_DESTRUCTIBLE(T)>>::value &&
+                       TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(E)::value &&
+                       TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(E)::value && TL_EXPECTED_IS_TRIVIALLY_DESTRUCTIBLE(E)::value>
 struct expected_copy_assign_base : expected_move_base<T, E> {
   using expected_move_base<T, E>::expected_move_base;
 };

@@ -132,8 +132,8 @@ TEST_CASE("Deletion", "[bases.deletion]") {
 		REQUIRE(std::is_move_constructible<decltype(e)>::value);
 		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
 		REQUIRE(std::is_move_assignable<decltype(e)>::value);
-		REQUIRE(IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
-		REQUIRE(IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
+		REQUIRE(TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
+		REQUIRE(TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
 #	if !defined(TL_EXPECTED_GCC49)
 		REQUIRE(std::is_trivially_move_constructible<decltype(e)>::value);
 		REQUIRE(std::is_trivially_move_assignable<decltype(e)>::value);
@@ -147,8 +147,8 @@ TEST_CASE("Deletion", "[bases.deletion]") {
 		REQUIRE(std::is_move_constructible<decltype(e)>::value);
 		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
 		REQUIRE(std::is_move_assignable<decltype(e)>::value);
-		REQUIRE(!IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
-		REQUIRE(!IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
 #	if !defined(TL_EXPECTED_GCC49)
 		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
 		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
@@ -162,8 +162,8 @@ TEST_CASE("Deletion", "[bases.deletion]") {
 		REQUIRE(std::is_move_constructible<decltype(e)>::value);
 		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
 		REQUIRE(std::is_move_assignable<decltype(e)>::value);
-		REQUIRE(!IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
-		REQUIRE(!IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
 #	if !defined(TL_EXPECTED_GCC49)
 		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
 		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
@@ -177,8 +177,8 @@ TEST_CASE("Deletion", "[bases.deletion]") {
 		REQUIRE(std::is_move_constructible<decltype(e)>::value);
 		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
 		REQUIRE(std::is_move_assignable<decltype(e)>::value);
-		REQUIRE(!IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
-		REQUIRE(!IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
 #	if !defined(TL_EXPECTED_GCC49)
 		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
 		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);

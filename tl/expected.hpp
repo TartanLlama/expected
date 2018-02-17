@@ -81,8 +81,7 @@
 #endif
 
 #if (__cplusplus == 201103L || defined(TL_EXPECTED_MSVC2015) ||                \
-     defined(TL_EXPECTED_GCC49)) &&                                            \
-    !defined(TL_EXPECTED_GCC54)
+     defined(TL_EXPECTED_GCC49))
 /// \exclude
 #define TL_EXPECTED_11_CONSTEXPR
 #else
@@ -1702,7 +1701,7 @@ public:
   ///
   /// \group value
   template <class U=T, detail::enable_if_t<!std::is_void<U>::value>* = nullptr>
-  TL_EXPECTED_GCC49_CONSTEXPR const U &value() const & {
+  TL_EXPECTED_11_CONSTEXPR const U &value() const & {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return val();
@@ -1716,7 +1715,7 @@ public:
   }
   /// \group value
   template <class U=T, detail::enable_if_t<!std::is_void<U>::value>* = nullptr>
-  TL_EXPECTED_GCC49_CONSTEXPR const U &&value() const && {
+  TL_EXPECTED_11_CONSTEXPR const U &&value() const && {
     if (!has_value())
       throw bad_expected_access<E>(err().value());
     return std::move(val());

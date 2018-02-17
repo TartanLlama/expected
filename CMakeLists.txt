@@ -25,6 +25,7 @@ target_include_directories(expected INTERFACE ${CMAKE_SOURCE_DIR}/tl)
 
 target_link_libraries(tests Catch expected)
 set_property(TARGET tests PROPERTY CXX_STANDARD 14)
+set_property(TARGET tests PROPERTY CXX_FLAGS "-Wall -Wextra")
 
 
 find_package(standardese) # find standardese after installation

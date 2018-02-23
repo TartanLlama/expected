@@ -24,7 +24,9 @@ target_sources(expected INTERFACE ${CMAKE_SOURCE_DIR}/tl/expected.hpp)
 target_include_directories(expected INTERFACE ${CMAKE_SOURCE_DIR}/tl)
 
 target_link_libraries(tests Catch expected)
-set_property(TARGET tests PROPERTY CXX_STANDARD 14)
+
+set(CXXSTD 14 CACHE STRING "C++ standard to use, default C++14")
+set_property(TARGET tests PROPERTY CXX_STANDARD ${CXXSTD})
 set_property(TARGET tests PROPERTY CXX_FLAGS "-Wall -Wextra")
 
 

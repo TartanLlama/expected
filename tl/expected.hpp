@@ -1871,7 +1871,7 @@ auto map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
     !defined(TL_EXPECTED_GCC54)
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
+                                              std::declval<Exp>().error())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 constexpr auto map_error_impl(Exp &&exp, F &&f) {
   using result = expected<exp_t<Exp>, detail::decay_t<Ret>>;
@@ -1882,7 +1882,7 @@ constexpr auto map_error_impl(Exp &&exp, F &&f) {
 }
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
+                                              std::declval<Exp>().error())),
           detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
 auto map_error_impl(Exp &&exp, F &&f) {
   using result = expected<exp_t<Exp>, monostate>;
@@ -1896,7 +1896,7 @@ auto map_error_impl(Exp &&exp, F &&f) {
 #else
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
+                                              std::declval<Exp>().error())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 constexpr auto map_error_impl(Exp &&exp, F &&f)
     -> expected<exp_t<Exp>, detail::decay_t<Ret>> {
@@ -1910,7 +1910,7 @@ constexpr auto map_error_impl(Exp &&exp, F &&f)
 
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
+                                              std::declval<Exp>().error())),
           detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
 auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, monostate> {
   using result = expected<exp_t<Exp>, monostate>;

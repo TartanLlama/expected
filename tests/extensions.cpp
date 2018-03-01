@@ -367,3 +367,19 @@ TEST_CASE("And then extensions", "[extensions.and_then]") {
     REQUIRE(ret.error() == 21);
   }
 }
+
+struct S {
+    int x;
+};
+
+struct F {
+    int x;
+};
+
+TEST_CASE("14", "[issue.14]") {
+    auto res = tl::expected<S,F>{tl::unexpect, F{}};
+
+    res.map_error([](F f) {
+
+    });
+}

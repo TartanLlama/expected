@@ -12,7 +12,7 @@ matrix:
              - ubuntu-toolchain-r-test
           packages:
              - g++-5
-      env: COMPILER=g++-5
+      env: COMPILER=g++-5 CXXSTD=11
     - compiler: gcc
       addons:
         apt:
@@ -20,7 +20,7 @@ matrix:
              - ubuntu-toolchain-r-test
           packages:
              - g++-4.9
-      env: COMPILER=g++-4.9
+      env: COMPILER=g++-4.9 CXXSTD=11
     - compiler: gcc
       addons:
         apt:
@@ -28,7 +28,7 @@ matrix:
              - ubuntu-toolchain-r-test
           packages:
              - g++-4.8
-      env: COMPILER=g++-4.8
+      env: COMPILER=g++-4.8 CXXSTD=11
     - compiler: clang
       addons:
         apt:
@@ -38,7 +38,7 @@ matrix:
           packages:
              - clang++-3.5
              - libc++-dev
-      env: COMPILER=clang++-3.5
+      env: COMPILER=clang++-3.5 CXXSTD=11
     - compiler: clang
       addons:
         apt:
@@ -48,7 +48,7 @@ matrix:
           packages:
              - clang++-3.6
              - libc++-dev
-      env: COMPILER=clang++-3.6
+      env: COMPILER=clang++-3.6 CXXSTD=11
     - compiler: clang
       addons:
         apt:
@@ -58,7 +58,7 @@ matrix:
           packages:
              - clang++-3.7
              - libc++-dev
-      env: COMPILER=clang++-3.7
+      env: COMPILER=clang++-3.7 CXXSTD=11
     - compiler: clang
       addons:
         apt:
@@ -68,7 +68,7 @@ matrix:
           packages:
              - clang++-3.8
              - libc++-dev
-      env: COMPILER=clang++-3.8
+      env: COMPILER=clang++-3.8 CXXSTD=11
     - compiler: clang
       addons:
         apt:
@@ -79,8 +79,66 @@ matrix:
           packages:
             - clang++-3.9
             - libc++-dev
-      env: COMPILER=clang++-3.9
-
+      env: COMPILER=clang++-3.9 CXXSTD=11
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+             - ubuntu-toolchain-r-test
+          packages:
+             - g++-5
+      env: COMPILER=g++-5 CXXSTD=14
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-3.5
+             - ubuntu-toolchain-r-test
+          packages:
+             - clang++-3.5
+             - libc++-dev
+      env: COMPILER=clang++-3.5 CXXSTD=14
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-3.6
+             - ubuntu-toolchain-r-test
+          packages:
+             - clang++-3.6
+             - libc++-dev
+      env: COMPILER=clang++-3.6 CXXSTD=14
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-3.7
+             - ubuntu-toolchain-r-test
+          packages:
+             - clang++-3.7
+             - libc++-dev
+      env: COMPILER=clang++-3.7 CXXSTD=14
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-3.8
+             - ubuntu-toolchain-r-test
+          packages:
+             - clang++-3.8
+             - libc++-dev
+      env: COMPILER=clang++-3.8 CXXSTD=14
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+              key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang++-3.9
+            - libc++-dev
+      env: COMPILER=clang++-3.9 CXXSTD=14
 
 install:
     - if [ "$CXX" = "clang++" ]; then export CXX="$COMPILER -stdlib=libc++"; fi

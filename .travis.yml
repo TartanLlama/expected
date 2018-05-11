@@ -11,8 +11,8 @@ matrix:
           sources:
              - ubuntu-toolchain-r-test
           packages:
-             - g++-5=5.5\*
-      env: COMPILER=g++-5 CXXSTD=11
+             - g++-6
+      env: COMPILER=g++-6 CXXSTD=11
     - compiler: gcc
       addons:
         apt:
@@ -86,8 +86,8 @@ matrix:
           sources:
              - ubuntu-toolchain-r-test
           packages:
-             - g++-5
-      env: COMPILER=g++-5 CXXSTD=14
+             - g++-6
+      env: COMPILER=g++-6 CXXSTD=14
     - compiler: clang
       addons:
         apt:

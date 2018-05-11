@@ -293,7 +293,7 @@ template <class T, class E, bool = std::is_trivially_destructible<T>::value,
           bool = std::is_trivially_destructible<E>::value>
 struct expected_storage_base {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
-  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
+  constexpr expected_storage_base(no_init_t) : m_no_init(), m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -329,6 +329,7 @@ struct expected_storage_base {
     }
   }
   union {
+    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
   };
@@ -339,7 +340,7 @@ struct expected_storage_base {
 // so the destructor of the `expected` can be trivial.
 template <class T, class E> struct expected_storage_base<T, E, true, true> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
-  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
+  constexpr expected_storage_base(no_init_t) : m_no_init(), m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -369,6 +370,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
 
   ~expected_storage_base() = default;
   union {
+    char m_no_init;      
     T m_val;
     unexpected<E> m_unexpect;
   };
@@ -379,7 +381,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
 template <class T, class E> struct expected_storage_base<T, E, true, false> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
   TL_EXPECTED_MSVC2015_CONSTEXPR expected_storage_base(no_init_t)
-      : m_has_val(false) {}
+      : m_no_init(), m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -414,6 +416,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
   }
 
   union {
+    char m_no_init;      
     T m_val;
     unexpected<E> m_unexpect;
   };
@@ -423,7 +426,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
 // E is trivial, T is not.
 template <class T, class E> struct expected_storage_base<T, E, false, true> {
   constexpr expected_storage_base() : m_val(T{}), m_has_val(true) {}
-  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
+  constexpr expected_storage_base(no_init_t) : m_no_init(), m_has_val(false) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<T, Args &&...>::value> * =
@@ -457,6 +460,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
     }
   }
   union {
+    char m_no_init;      
     T m_val;
     unexpected<E> m_unexpect;
   };
@@ -466,7 +470,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 // `T` is `void`, `E` is trivially-destructible
 template <class E> struct expected_storage_base<void, E, false, true> {
   TL_EXPECTED_MSVC2015_CONSTEXPR expected_storage_base() : m_has_val(true) {}
-  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
+  constexpr expected_storage_base(no_init_t) : m_val(), m_has_val(false) {}
 
   constexpr expected_storage_base(in_place_t) : m_has_val(true) {}
 
@@ -522,6 +526,7 @@ template <class E> struct expected_storage_base<void, E, false, false> {
 
   struct dummy {};
   union {
+    char m_no_init;      
     dummy m_val;
     unexpected<E> m_unexpect;
   };

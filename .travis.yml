@@ -11,7 +11,7 @@ matrix:
           sources:
              - ubuntu-toolchain-r-test
           packages:
-             - g++-5=5.4.1\*
+             - g++-5=5.5\*
       env: COMPILER=g++-5 CXXSTD=11
     - compiler: gcc
       addons:

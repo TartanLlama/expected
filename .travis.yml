@@ -96,6 +96,16 @@ matrix:
             - clang++-3.9
             - libc++-dev
       env: COMPILER=clang++-3.9 CXXSTD=11
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-4.0
+             - ubuntu-toolchain-r-test
+          packages:
+             - clang++-4.0
+             - libc++-dev
+      env: COMPILER=clang++-4.0 CXXSTD=11             
     - compiler: gcc
       addons:
         apt:
@@ -171,6 +181,16 @@ matrix:
             - clang++-3.9
             - libc++-dev
       env: COMPILER=clang++-3.9 CXXSTD=14
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+             - llvm-toolchain-precise-4.0
+             - ubuntu-toolchain-r-test
+          packages:
+             - clang++-4.0
+             - libc++-dev
+      env: COMPILER=clang++-4.0 CXXSTD=14      
 
 install:
     - if [ "$CXX" = "clang++" ]; then export CXX="$COMPILER -stdlib=libc++"; fi

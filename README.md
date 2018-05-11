@@ -60,21 +60,25 @@ The interface is the same as `std::expected` as proposed in [p0323r3](http://www
 
 Tested on:
 
-- Linux CI
+- Linux
+  * clang 6.0.1
+  * clang 5.0.2
+  * clang 4.0.1
   * clang 3.9
   * clang 3.8
   * clang 3.7
   * clang 3.6
   * clang 3.5
-  * g++ 5.0
+  * g++ 8.0.1  
+  * g++ 7.3  
+  * g++ 6.4
   * g++ 4.9
   * g++ 4.8
-- Windows CI
+- Windows
   * MSVC 2015
   * MSVC 2017
-- Linux manual
-  * g++ 7.2
-  * g++ 5.4
+
+Unfortunately GCC5.5 has a compiler bug which I have not worked around yet. All other GCC5 versions should work.
 
 ### Dependencies
 

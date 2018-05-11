@@ -19,6 +19,22 @@ matrix:
           sources:
              - ubuntu-toolchain-r-test
           packages:
+             - g++-7
+      env: COMPILER=g++-7 CXXSTD=11
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+             - ubuntu-toolchain-r-test
+          packages:
+             - g++-8
+      env: COMPILER=g++-8 CXXSTD=11
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+             - ubuntu-toolchain-r-test
+          packages:
              - g++-4.9
       env: COMPILER=g++-4.9 CXXSTD=11
     - compiler: gcc
@@ -88,6 +104,22 @@ matrix:
           packages:
              - g++-6
       env: COMPILER=g++-6 CXXSTD=14
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+             - ubuntu-toolchain-r-test
+          packages:
+             - g++-7
+      env: COMPILER=g++-7 CXXSTD=14
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+             - ubuntu-toolchain-r-test
+          packages:
+             - g++-8
+      env: COMPILER=g++-8 CXXSTD=14      
     - compiler: clang
       addons:
         apt:

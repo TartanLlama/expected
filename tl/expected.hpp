@@ -22,6 +22,10 @@
 #include <type_traits>
 #include <utility>
 
+#if defined(__EXCEPTIONS) || defined(_CPPUNWIND)
+#define TL_EXPECTED_EXCEPTIONS_ENABLED
+#endif
+
 #if (defined(_MSC_VER) && _MSC_VER == 1900)
 /// \exclude
 #define TL_EXPECTED_MSVC2015
@@ -186,7 +190,7 @@ static constexpr unexpect_t unexpect{};
 namespace detail {
 template<typename E>
 [[noreturn]] constexpr void throw_exception(E &&e) {
-#if defined(__EXCEPTIONS) || defined(_CPPUNWIND)
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     throw std::forward<E>(e);
 #else
   #ifdef _MSC_VER
@@ -196,7 +200,7 @@ template<typename E>
   #endif
 #endif
 }
-    
+
 #ifndef TL_TRAITS_MUTEX
 #define TL_TRAITS_MUTEX
 // C++14-style aliases for brevity
@@ -383,7 +387,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
 
   ~expected_storage_base() = default;
   union {
-    char m_no_init;      
+    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
   };
@@ -429,7 +433,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
   }
 
   union {
-    char m_no_init;      
+    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
   };
@@ -473,7 +477,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
     }
   }
   union {
-    char m_no_init;      
+    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
   };
@@ -539,7 +543,7 @@ template <class E> struct expected_storage_base<void, E, false, false> {
 
   struct dummy {};
   union {
-    char m_no_init;      
+    char m_no_init;
     dummy m_val;
     unexpected<E> m_unexpect;
   };
@@ -567,6 +571,8 @@ struct expected_operations_base : expected_storage_base<T, E> {
         unexpected<E>(std::forward<Args>(args)...);
     this->m_has_val = false;
   }
+
+  #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
 
   // These assign overloads ensure that the most efficient assignment
   // implementation is used while maintaining the strong exception guarantee.
@@ -657,6 +663,29 @@ struct expected_operations_base : expected_storage_base<T, E> {
       assign_common(rhs);
     }
   }
+
+  #else
+
+  // If exceptions are disabled then we can just copy-construct
+  void assign(const expected_operations_base &rhs) noexcept {
+    if (!this->m_has_val && rhs.m_has_val) {
+      geterr().~unexpected<E>();
+      construct(rhs.get());
+    } else {
+      assign_common(rhs);
+    }
+  }
+
+  void assign(expected_operations_base &&rhs) noexcept {
+    if (!this->m_has_val && rhs.m_has_val) {
+      geterr().~unexpected<E>();
+      construct(std::move(rhs).get());
+    } else {
+      assign_common(rhs);
+    }
+  }
+
+  #endif
 
   // The common part of move/copy assigning
   template <class Rhs> void assign_common(Rhs &&rhs) {
@@ -1559,6 +1588,8 @@ public:
     } else {
       auto tmp = std::move(err());
       err().~unexpected<E>();
+
+      #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
         ::new (valptr()) T(std::move(v));
         this->m_has_val = true;
@@ -1566,6 +1597,10 @@ public:
         err() = std::move(tmp);
         throw;
       }
+      #else
+        ::new (valptr()) T(std::move(v));
+        this->m_has_val = true;
+      #endif
     }
 
     return *this;
@@ -1623,6 +1658,7 @@ public:
       auto tmp = std::move(err());
       err().~unexpected<E>();
 
+      #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
         ::new (valptr()) T(std::forward<Args>(args)...);
         this->m_has_val = true;
@@ -1630,6 +1666,10 @@ public:
         err() = std::move(tmp);
         throw;
       }
+      #else
+      ::new (valptr()) T(std::forward<Args>(args)...);
+      this->m_has_val = true;
+      #endif
     }
   }
 
@@ -1659,6 +1699,7 @@ public:
       auto tmp = std::move(err());
       err().~unexpected<E>();
 
+      #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
         ::new (valptr()) T(il, std::forward<Args>(args)...);
         this->m_has_val = true;
@@ -1666,6 +1707,10 @@ public:
         err() = std::move(tmp);
         throw;
       }
+      #else
+      ::new (valptr()) T(il, std::forward<Args>(args)...);
+      this->m_has_val = true;
+      #endif
     }
   }
 

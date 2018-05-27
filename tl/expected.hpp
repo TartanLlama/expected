@@ -1369,11 +1369,11 @@ public:
 #endif
 
   /// \brief Calls `f` if the expectd is in the unexpected state
-  /// \requires `std::invoke_result_t<F>` must be void or convertible to
-  /// `expcted<T,E>`.
+  /// \requires `F` is invokable with `E`, and `std::invoke_result_t<F>`
+  /// must be void or convertible to `expcted<T,E>`.
   /// \effects If `*this` has a value, returns `*this`.
-  /// Otherwise, if `f` returns `void`, calls `std::forward<F>(f)` and returns
-  /// `std::nullopt`. Otherwise, returns `std::forward<F>(f)()`.
+  /// Otherwise, if `f` returns `void`, calls `std::forward<F>(f)(E)` and returns
+  /// `std::nullopt`. Otherwise, returns `std::forward<F>(f)(E)`.
   ///
   /// \group or_else
   template <class F> expected TL_EXPECTED_11_CONSTEXPR or_else(F &&f) & {
@@ -2011,26 +2011,26 @@ auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, monostate> {
 
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
+                                              std::declval<Exp>().error())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
 constexpr detail::decay_t<Exp> or_else_impl(Exp &&exp, F &&f) {
   if (exp.has_value()) {
     return std::forward<Exp>(exp);
   }
 
-  return detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp));
+  return detail::invoke(std::forward<F>(f), std::forward<Exp>(exp).error());
 }
 
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
+                                              std::declval<Exp>().error())),
           detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
 detail::decay_t<Exp> or_else_impl(Exp &&exp, F &&f) {
   if (exp.has_value()) {
     return std::forward<Exp>(exp);
   }
 
-  detail::invoke(std::forward<F>(f), *std::forward<Exp>(exp));
+  detail::invoke(std::forward<F>(f), std::forward<Exp>(exp).error());
   return std::forward<Exp>(exp);
 }
 

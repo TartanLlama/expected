@@ -1388,10 +1388,11 @@ public:
     return or_else_impl(*this, std::forward<F>(f));
   }
 
+#ifndef TL_EXPECTED_NO_CONSTRR
   template <class F> expected constexpr or_else(F &&f) const && {
     return or_else_impl(std::move(*this), std::forward<F>(f));
   }
-
+#endif
   constexpr expected() = default;
   constexpr expected(const expected &rhs) = default;
   constexpr expected(expected &&rhs) = default;

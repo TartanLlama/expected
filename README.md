@@ -88,7 +88,7 @@ Requires [Catch](https://github.com/philsquared/Catch) for testing. This is bund
 
 ### Acknowledgements
 
-Thanks to [Kévin Alexandre Boissonneault](https://github.com/KABoissonneault) for various bug fixes.
+Thanks to [Kévin Alexandre Boissonneault](https://github.com/KABoissonneault) and [Björn Fahller](https://github.com/rollbear) for various bug fixes.
 
 ----------
 

@@ -244,9 +244,9 @@ template <class F, class, class... Us> struct invoke_result_impl;
 
 template <class F, class... Us>
 struct invoke_result_impl<
-    F, decltype(invoke(std::declval<F>(), std::declval<Us>()...), void()),
+    F, decltype(detail::invoke(std::declval<F>(), std::declval<Us>()...), void()),
     Us...> {
-  using type = decltype(invoke(std::declval<F>(), std::declval<Us>()...));
+  using type = decltype(detail::invoke(std::declval<F>(), std::declval<Us>()...));
 };
 
 template <class F, class... Us>

@@ -72,13 +72,12 @@ Tested on:
   * g++ 8.0.1  
   * g++ 7.3  
   * g++ 6.4
+  * g++ 5.5  
   * g++ 4.9
   * g++ 4.8
 - Windows
   * MSVC 2015
   * MSVC 2017
-
-Unfortunately GCC5.5 has a compiler bug which I have not worked around yet. All other GCC5 versions should work.
 
 ### Dependencies
 

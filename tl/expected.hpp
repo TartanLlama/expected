@@ -648,7 +648,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
       geterr().~unexpected<E>();
       construct(std::move(rhs).get());
     } else {
-      assign_common(rhs);
+      assign_common(std::move(rhs));
     }
   }
 
@@ -666,7 +666,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
         throw;
       }
     } else {
-      assign_common(rhs);
+      assign_common(std::move(rhs));
     }
   }
 

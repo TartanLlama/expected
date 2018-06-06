@@ -278,7 +278,7 @@ using expected_enable_forward_value = detail::enable_if_t<
 template <class T, class E, class U, class G, class UR, class GR>
 using expected_enable_from_other = detail::enable_if_t<
     std::is_constructible<T, UR>::value &&
-    std::is_constructible<T, GR>::value &&
+    std::is_constructible<E, GR>::value &&
     !std::is_constructible<T, expected<U, G> &>::value &&
     !std::is_constructible<T, expected<U, G> &&>::value &&
     !std::is_constructible<T, const expected<U, G> &>::value &&

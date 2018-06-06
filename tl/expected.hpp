@@ -46,6 +46,12 @@
 #define TL_EXPECTED_GCC54
 #endif
 
+#if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 5 &&              \
+     !defined(__clang__))
+/// \exclude
+#define TL_EXPECTED_GCC55
+#endif
+
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \
      !defined(__clang__))
 // GCC < 5 doesn't support overloading on const&& for member functions
@@ -1128,7 +1134,7 @@ public:
   typedef unexpected<E> unexpected_type;
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
-    !defined(TL_EXPECTED_GCC54)
+    !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
   /// \group and_then
   /// Carries out some operation which returns an expected on the stored object
   /// if there is one. \requires `std::invoke(std::forward<F>(f), value())`
@@ -1206,7 +1212,7 @@ public:
 #endif
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
-    !defined(TL_EXPECTED_GCC54)
+    !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
   /// \brief Carries out some operation on the stored object if there is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
   /// value())`. If `U` is `void`, returns an `expected<monostate,E>, otherwise
@@ -1287,7 +1293,7 @@ public:
 #endif
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
-    !defined(TL_EXPECTED_GCC54)
+    !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
   /// \brief Carries out some operation on the stored unexpected object if there
   /// is one.
   /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
@@ -1955,7 +1961,7 @@ auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
 #endif
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
-    !defined(TL_EXPECTED_GCC54)
+    !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               std::declval<Exp>().error())),

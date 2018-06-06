@@ -195,7 +195,7 @@ static constexpr unexpect_t unexpect{};
 /// \exclude
 namespace detail {
 template<typename E>
-[[noreturn]] constexpr void throw_exception(E &&e) {
+[[noreturn]] TL_EXPECTED_11_CONSTEXPR void throw_exception(E &&e) {
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     throw std::forward<E>(e);
 #else

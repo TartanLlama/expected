@@ -723,7 +723,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   }
   constexpr const unexpected<E> &geterr() const & { return this->m_unexpect; }
   TL_EXPECTED_11_CONSTEXPR unexpected<E> &&geterr() && {
-    std::move(this->m_unexpect);
+    return std::move(this->m_unexpect);
   }
 #ifndef TL_EXPECTED_NO_CONSTRR
   constexpr const unexpected<E> &&geterr() const && {

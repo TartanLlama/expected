@@ -1486,11 +1486,9 @@ public:
   explicit TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
-      ::new (valptr()) T(*rhs);
-      this->m_has_val = true;        
+      this->construct(*rhs);
     } else {
-      ::new (errptr()) unexpected_type(unexpected<E>(rhs.error()));
-      this->m_has_val = false;                
+      this->construct_error(rhs.error());        
     }
   }
 
@@ -1504,12 +1502,10 @@ public:
   TL_EXPECTED_11_CONSTEXPR expected(const expected<U, G> &rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
-      ::new (valptr()) T(*rhs);
-      this->m_has_val = true;
+      this->construct(*rhs);
     } else {
-      ::new (errptr()) unexpected_type(unexpected<E>(rhs.error()));
-      this->m_has_val = false;                        
-    }
+      this->construct_error(rhs.error());        
+    }      
   }
 
   template <
@@ -1520,12 +1516,10 @@ public:
   explicit TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
-      ::new (valptr()) T(std::move(*rhs));
-      this->m_has_val = true;        
+      this->construct(std::move(*rhs));
     } else {
-      ::new (errptr()) unexpected_type(unexpected<E>(std::move(rhs.error())));
-      this->m_has_val = false;                        
-    }
+      this->construct_error(std::move(rhs.error()));        
+    }            
   }
 
   /// \exclude
@@ -1537,12 +1531,10 @@ public:
   TL_EXPECTED_11_CONSTEXPR expected(expected<U, G> &&rhs)
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
-      ::new (valptr()) T(std::move(*rhs));
-      this->m_has_val = true;        
+      this->construct(std::move(*rhs));
     } else {
-      ::new (errptr()) unexpected_type(unexpected<E>(std::move(rhs.error())));
-      this->m_has_val = false;                        
-    }
+      this->construct_error(std::move(rhs.error()));        
+    }                  
   }
 
   template <

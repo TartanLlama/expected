@@ -22,3 +22,11 @@ TEST_CASE("Issue 17", "[issues.17]") {
 
   intermediate_result.and_then(operation2);
 }
+
+struct a{};
+struct b:a{};
+
+TEST_CASE("Issue 26", "[issues.26]") {
+    tl::expected<a, int> exp = tl::expected<b,int>(tl::unexpect, 0);
+    REQUIRE(!exp.has_value());
+}

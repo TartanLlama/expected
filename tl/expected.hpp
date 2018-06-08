@@ -1487,8 +1487,10 @@ public:
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(*rhs);
+      this->m_has_val = true;        
     } else {
       ::new (errptr()) unexpected_type(unexpected<E>(rhs.error()));
+      this->m_has_val = false;                
     }
   }
 
@@ -1503,8 +1505,10 @@ public:
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(*rhs);
+      this->m_has_val = true;
     } else {
       ::new (errptr()) unexpected_type(unexpected<E>(rhs.error()));
+      this->m_has_val = false;                        
     }
   }
 
@@ -1517,8 +1521,10 @@ public:
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(std::move(*rhs));
+      this->m_has_val = true;        
     } else {
       ::new (errptr()) unexpected_type(unexpected<E>(std::move(rhs.error())));
+      this->m_has_val = false;                        
     }
   }
 
@@ -1532,8 +1538,10 @@ public:
       : ctor_base(detail::default_constructor_tag{}) {
     if (rhs.has_value()) {
       ::new (valptr()) T(std::move(*rhs));
+      this->m_has_val = true;        
     } else {
       ::new (errptr()) unexpected_type(unexpected<E>(std::move(rhs.error())));
+      this->m_has_val = false;                        
     }
   }
 

@@ -30,3 +30,16 @@ TEST_CASE("Issue 26", "[issues.26]") {
     tl::expected<a, int> exp = tl::expected<b,int>(tl::unexpect, 0);
     REQUIRE(!exp.has_value());
 }
+
+struct foo {
+  foo() = default;
+  foo(foo&) = delete;
+  foo(foo&&) {};
+};
+
+TEST_CASE("Issue 29", "[issues.29]") {
+  std::vector<foo> v;
+  v.emplace_back();
+  tl::expected<std::vector<foo>, int> ov = std::move(v);
+  REQUIRE(ov->size() == 1);
+}

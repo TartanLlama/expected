@@ -70,6 +70,29 @@
 /// \exclude
 #define TL_EXPECTED_IS_TRIVIALLY_DESTRUCTIBLE(T)                               \
   std::is_trivially_destructible<T>
+
+// GCC 5 < v < 8 has a bug in is_trivially_copy_constructible which breaks std::vector
+// for non-copyable types
+#elif (defined(__GNUC__) && __GNUC__ < 8 &&                                                \
+     !defined(__clang__))
+#ifndef TL_GCC_LESS_8_TRIVIALLY_COPY_CONSTRUCTIBLE_MUTEX
+#define TL_GCC_LESS_8_TRIVIALLY_COPY_CONSTRUCTIBLE_MUTEX
+namespace tl {
+  namespace detail {
+      template<class T>
+      struct is_trivially_copy_constructible : std::is_trivially_copy_constructible<T>{};
+      template<class T, class A>
+      struct is_trivially_copy_constructible<std::vector<T,A>>
+          : std::is_trivially_copy_constructible<T>{};
+  }
+}
+#endif
+
+#define TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                                     \
+  tl::detail::is_trivially_copy_constructible<T>
+#define TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(T)                                        \
+  std::is_trivially_copy_assignable<T>
+#define TL_EXPECTED_IS_TRIVIALLY_DESTRUCTIBLE(T) std::is_trivially_destructible<T>
 #else
 /// \exclude
 #define TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(T)                         \

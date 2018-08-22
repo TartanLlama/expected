@@ -143,7 +143,6 @@ matrix:
           packages:
              - g++-5
       env: COMPILER=g++-5 CXXSTD=14
-
     - compiler: gcc
       addons:
         apt:

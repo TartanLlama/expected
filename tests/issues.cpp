@@ -26,6 +26,15 @@ TEST_CASE("Issue 17", "[issues.17]") {
 struct a {};
 struct b : a {};
 
+auto doit() -> tl::expected<std::unique_ptr<b>, int> {
+    return tl::make_unexpected(0);
+}
+
+TEST_CASE("Issue 23", "[issues.23]") {
+    tl::expected<std::unique_ptr<a>, int> msg = doit();
+    REQUIRE(!msg.has_value());    
+}
+
 TEST_CASE("Issue 26", "[issues.26]") {
   tl::expected<a, int> exp = tl::expected<b, int>(tl::unexpect, 0);
   REQUIRE(!exp.has_value());

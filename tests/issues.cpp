@@ -23,18 +23,18 @@ TEST_CASE("Issue 17", "[issues.17]") {
   intermediate_result.and_then(operation2);
 }
 
-struct a{};
-struct b:a{};
+struct a {};
+struct b : a {};
 
 TEST_CASE("Issue 26", "[issues.26]") {
-    tl::expected<a, int> exp = tl::expected<b,int>(tl::unexpect, 0);
-    REQUIRE(!exp.has_value());
+  tl::expected<a, int> exp = tl::expected<b, int>(tl::unexpect, 0);
+  REQUIRE(!exp.has_value());
 }
 
 struct foo {
   foo() = default;
-  foo(foo&) = delete;
-  foo(foo&&) {};
+  foo(foo &) = delete;
+  foo(foo &&){};
 };
 
 TEST_CASE("Issue 29", "[issues.29]") {
@@ -42,4 +42,13 @@ TEST_CASE("Issue 29", "[issues.29]") {
   v.emplace_back();
   tl::expected<std::vector<foo>, int> ov = std::move(v);
   REQUIRE(ov->size() == 1);
+}
+
+tl::expected<int, std::string> error() {
+  return tl::make_unexpected(std::string("error1 "));
+}
+std::string maperror(std::string s) { return s + "maperror "; }
+
+TEST_CASE("Issue 30", "[issues.30]") {
+  error().map_error(maperror);
 }

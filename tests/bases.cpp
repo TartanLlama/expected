@@ -68,7 +68,7 @@ TEST_CASE("Deletion", "[bases.deletion]") {
 
     {
         struct T {
-            T(int);
+            T(int){}
         };
         REQUIRE(!std::is_default_constructible<tl::expected<T,int>>::value);
     }

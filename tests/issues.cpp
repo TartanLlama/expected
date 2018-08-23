@@ -61,3 +61,11 @@ std::string maperror(std::string s) { return s + "maperror "; }
 TEST_CASE("Issue 30", "[issues.30]") {
   error().map_error(maperror);
 }
+
+struct i31{
+  int i;
+};
+TEST_CASE("Issue 31", "[issues.31]") {
+    const tl::expected<i31, int> a = i31{42};
+    a->i;
+}

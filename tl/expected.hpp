@@ -1134,7 +1134,9 @@ class expected : private detail::expected_move_assign_base<T, E>,
   static_assert(!std::is_reference<E>::value, "E must not be a reference");
 
   T *valptr() { return std::addressof(this->m_val); }
+  const T *valptr() const { return std::addressof(this->m_val); }    
   unexpected<E> *errptr() { return std::addressof(this->m_unexpect); }
+  const unexpected<E> *errptr() const { return std::addressof(this->m_unexpect); }    
 
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>

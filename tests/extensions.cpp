@@ -572,3 +572,13 @@ TEST_CASE("14", "[issue.14]") {
 
     });
 }
+
+TEST_CASE("32", "[issue.32]") {
+    int i = 0;
+    tl::expected<void, int> a;
+    a.map([&i]{i = 42;});
+    REQUIRE(i == 42);
+
+    auto x = a.map([]{return 42;});
+    REQUIRE(*x == 42);
+}

@@ -1934,6 +1934,7 @@ constexpr auto and_then_impl(Exp &&exp, F &&f) -> Ret {
 
 #ifdef TL_EXPECTED_CXX14
 template <class Exp, class F,
+          detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,          
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Exp>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
@@ -1945,6 +1946,7 @@ constexpr auto expected_map_impl(Exp &&exp, F &&f) {
 }
 
 template <class Exp, class F,
+          detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,          
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Exp>())),
           detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
@@ -1957,6 +1959,30 @@ auto expected_map_impl(Exp &&exp, F &&f) {
 
   return result(unexpect, std::forward<Exp>(exp).error());
 }
+
+template <class Exp, class F,
+          detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
+          class Ret = decltype(detail::invoke(std::declval<F>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+constexpr auto expected_map_impl(Exp &&exp, F &&f) {
+  using result = ret_t<Exp, detail::decay_t<Ret>>;
+  return exp.has_value() ? result(detail::invoke(std::forward<F>(f)))
+                         : result(unexpect, std::forward<Exp>(exp).error());
+}
+
+template <class Exp, class F,
+          detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,          
+          class Ret = decltype(detail::invoke(std::declval<F>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+auto expected_map_impl(Exp &&exp, F &&f) {
+  using result = expected<void, err_t<Exp>>;
+  if (exp.has_value()) {
+    detail::invoke(std::forward<F>(f));
+    return result();
+  }
+
+  return result(unexpect, std::forward<Exp>(exp).error());
+}    
 #else
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),

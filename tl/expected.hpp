@@ -1985,6 +1985,7 @@ auto expected_map_impl(Exp &&exp, F &&f) {
 }    
 #else
 template <class Exp, class F,
+          detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,          
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Exp>())),
           detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
@@ -1999,6 +2000,7 @@ constexpr auto expected_map_impl(Exp &&exp, F &&f)
 }
 
 template <class Exp, class F,
+          detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,                    
           class Ret = decltype(detail::invoke(std::declval<F>(),
                                               *std::declval<Exp>())),
           detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
@@ -2011,6 +2013,33 @@ auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
 
   return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
 }
+
+template <class Exp, class F,
+          detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,                              
+          class Ret = decltype(detail::invoke(std::declval<F>())),
+          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+
+constexpr auto expected_map_impl(Exp &&exp, F &&f)
+    -> ret_t<Exp, detail::decay_t<Ret>> {
+  using result = ret_t<Exp, detail::decay_t<Ret>>;
+
+  return exp.has_value() ? result(detail::invoke(std::forward<F>(f)))
+                         : result(unexpect, std::forward<Exp>(exp).error());
+}
+
+template <class Exp, class F,
+          detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,                                        
+          class Ret = decltype(detail::invoke(std::declval<F>())),
+          detail::enable_if_t<std::is_void<Ret>::value> * = nullptr>
+
+auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
+  if (exp.has_value()) {
+    detail::invoke(std::forward<F>(f));
+    return {};
+  }
+
+  return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
+}    
 #endif
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \

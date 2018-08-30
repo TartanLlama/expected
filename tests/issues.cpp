@@ -73,3 +73,10 @@ TEST_CASE("Issue 31", "[issues.31]") {
     tl::expected< void, std::string > result2 = result;
     result2 = result;
 }
+
+TEST_CASE("Issue 33", "[issues.33]") {
+    tl::expected<void, int> res {tl::unexpect, 0};
+    REQUIRE(!res);    
+    res = res.map_error([](auto i) { return 42; });
+    REQUIRE(res.error() == 42);
+}

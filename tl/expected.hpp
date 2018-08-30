@@ -324,6 +324,16 @@ template <class T>
 using is_move_constructible_or_void =
     is_void_or<T, std::is_move_constructible<T>>;
 
+template <class T>
+using is_copy_assignable_or_void =
+    is_void_or<T, std::is_copy_assignable<T>>;
+
+
+template <class T>
+using is_move_assignable_or_void =
+    is_void_or<T, std::is_move_assignable<T>>;
+    
+
 } // namespace detail
 
 /// \exclude
@@ -998,13 +1008,13 @@ struct expected_delete_ctor_base<T, E, false, false> {
 // constructors depending on whether T and E are copy/move constructible +
 // assignable
 template <class T, class E,
-          bool EnableCopy = (std::is_copy_constructible<T>::value &&
+          bool EnableCopy = (is_copy_constructible_or_void<T>::value &&
                              std::is_copy_constructible<E>::value &&
-                             std::is_copy_assignable<T>::value &&
+                             is_copy_assignable_or_void<T>::value &&
                              std::is_copy_assignable<E>::value),
-          bool EnableMove = (std::is_move_constructible<T>::value &&
+          bool EnableMove = (is_move_constructible_or_void<T>::value &&
                              std::is_move_constructible<E>::value &&
-                             std::is_move_assignable<T>::value &&
+                             is_move_assignable_or_void<T>::value &&
                              std::is_move_assignable<E>::value)>
 struct expected_delete_assign_base {
   expected_delete_assign_base() = default;

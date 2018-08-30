@@ -68,4 +68,8 @@ struct i31{
 TEST_CASE("Issue 31", "[issues.31]") {
     const tl::expected<i31, int> a = i31{42};
     a->i;
+
+    tl::expected< void, std::string > result;
+    tl::expected< void, std::string > result2 = result;
+    result2 = result;
 }

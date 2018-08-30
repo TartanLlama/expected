@@ -557,10 +557,10 @@ template <class E> struct expected_storage_base<void, E, false, true> {
 
 // `T` is `void`, `E` is not trivially-destructible
 template <class E> struct expected_storage_base<void, E, false, false> {
-  constexpr expected_storage_base() : m_has_val(true) {}
-  constexpr expected_storage_base(no_init_t) : m_has_val(false) {}
+  constexpr expected_storage_base() : m_val(), m_has_val(true) {}
+  constexpr expected_storage_base(no_init_t) : m_no_init(), m_has_val(false) {}
 
-  constexpr expected_storage_base(in_place_t) : m_has_val(true) {}
+  constexpr expected_storage_base(in_place_t) : m_val(), m_has_val(true) {}
 
   template <class... Args,
             detail::enable_if_t<std::is_constructible<E, Args &&...>::value> * =

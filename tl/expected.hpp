@@ -1893,9 +1893,9 @@ template <class Exp, class Ret> using ret_t = expected<Ret, err_t<Exp>>;
 
 #ifdef TL_EXPECTED_CXX14
 template <class Exp, class F,
+          detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
-          detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr>
+                                              *std::declval<Exp>()))>
 constexpr auto and_then_impl(Exp &&exp, F &&f) {
   static_assert(detail::is_expected<Ret>::value, "F must return an expected");
 
@@ -1905,9 +1905,8 @@ constexpr auto and_then_impl(Exp &&exp, F &&f) {
 }
 
 template <class Exp, class F,
-          class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
-          detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr>
+          detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
+          class Ret = decltype(detail::invoke(std::declval<F>()))>
 constexpr auto and_then_impl(Exp &&exp, F &&f) {
   static_assert(detail::is_expected<Ret>::value, "F must return an expected");
 
@@ -1929,8 +1928,7 @@ auto and_then_impl(Exp &&exp, F &&f) -> Ret {
 }
 
 template <class Exp, class F,
-          class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              *std::declval<Exp>())),
+          class Ret = decltype(detail::invoke(std::declval<F>())),
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr>
 constexpr auto and_then_impl(Exp &&exp, F &&f) -> Ret {
   static_assert(detail::is_expected<Ret>::value, "F must return an expected");

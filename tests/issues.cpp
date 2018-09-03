@@ -80,3 +80,14 @@ TEST_CASE("Issue 33", "[issues.33]") {
     res = res.map_error([](int i) { return 42; });
     REQUIRE(res.error() == 42);
 }
+
+
+tl::expected<void, std::string> voidWork() { return {}; }
+tl::expected<int, std::string> work2() { return 42; }
+void errorhandling(std::string){}
+
+TEST_CASE("Issue 34", "[issues.34]") {
+  tl::expected <int, std::string> result = voidWork ()
+      .and_then (work2);
+  result.map_error ([&] (std::string result) {errorhandling (result);});
+}

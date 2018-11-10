@@ -1301,7 +1301,7 @@ public:
   /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(
-      expected_map_impl(std::declval<expected &>(), std::declval<F &&>()))
+      expected_map_impl(std::declval<expected>(), std::declval<F &&>()))
   map(F &&f) && {
     return expected_map_impl(std::move(*this), std::forward<F>(f));
   }

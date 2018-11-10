@@ -91,3 +91,13 @@ TEST_CASE("Issue 34", "[issues.34]") {
       .and_then (work2);
   result.map_error ([&] (std::string result) {errorhandling (result);});
 }
+
+struct non_copyable {
+	non_copyable(non_copyable&&) = default;
+	non_copyable(non_copyable const&) = delete;
+	non_copyable() = default;
+};
+
+TEST_CASE("Issue 42", "[issues.42]") {
+	tl::expected<non_copyable,int>{}.map([](non_copyable) {});
+}

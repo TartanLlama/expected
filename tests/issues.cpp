@@ -101,3 +101,8 @@ struct non_copyable {
 TEST_CASE("Issue 42", "[issues.42]") {
 	tl::expected<non_copyable,int>{}.map([](non_copyable) {});
 }
+
+TEST_CASE("Issue 43", "[issues.43]") {
+	auto result = tl::expected<void, std::string>{};
+	result = tl::make_unexpected(std::string{ "foo" });
+}

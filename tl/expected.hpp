@@ -732,7 +732,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
       if (rhs.m_has_val) {
         get() = std::forward<Rhs>(rhs).get();
       } else {
-        get().~T();
+		destroy_val();
         construct_error(std::forward<Rhs>(rhs).geterr());
       }
     } else {
@@ -763,6 +763,10 @@ struct expected_operations_base : expected_storage_base<T, E> {
     return std::move(this->m_unexpect);
   }
 #endif
+
+  constexpr void destroy_val() {
+	get().~T();
+  }
 };
 
 // This base class provides some handy member functions which can be used in
@@ -814,6 +818,10 @@ struct expected_operations_base<void, E> : expected_storage_base<void, E> {
     return std::move(this->m_unexpect);
   }
 #endif
+
+  constexpr void destroy_val() {
+	  //no-op
+  }
 };
 
 // This class manages conditionally having a trivial copy constructor
@@ -1655,7 +1663,7 @@ public:
     if (!has_value()) {
       err() = rhs;
     } else {
-      val().~T();
+      this->destroy_val();
       ::new (errptr()) unexpected<E>(rhs);
       this->m_has_val = false;
     }
@@ -1670,7 +1678,7 @@ public:
     if (!has_value()) {
       err() = std::move(rhs);
     } else {
-      val().~T();
+      this->destroy_val();
       ::new (errptr()) unexpected<E>(std::move(rhs));
       this->m_has_val = false;
     }

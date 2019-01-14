@@ -1764,12 +1764,17 @@ public:
     }
   }
 
-  // TODO SFINAE
+  template <class T2 = T, class E2 = E,
+    detail::enable_if_t<
+      std::is_void<decltype((void)swap(std::declval<T2 &>(),
+                                        std::declval<T2 &>()))>::value &&
+      std::is_void<decltype((void)swap(std::declval<E2 &>(),
+                                        std::declval<E2 &>()))>::value> = nullptr>
   void swap(expected &rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value &&noexcept(
-          swap(std::declval<T &>(), std::declval<T &>())) &&
-      std::is_nothrow_move_constructible<E>::value &&
-      noexcept(swap(std::declval<E &>(), std::declval<E &>()))) {
+      std::is_nothrow_move_constructible<T2>::value &&noexcept(
+          swap(std::declval<T2 &>(), std::declval<T2 &>())) &&
+      std::is_nothrow_move_constructible<E2>::value &&
+      noexcept(swap(std::declval<E2 &>(), std::declval<E2 &>()))) {
     if (has_value() && rhs.has_value()) {
       using std::swap;
       swap(val(), rhs.val());
@@ -2271,7 +2276,10 @@ constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
 // TODO is_swappable
 template <class T, class E,
           detail::enable_if_t<std::is_move_constructible<T>::value &&
-                              std::is_move_constructible<E>::value> * = nullptr>
+                              std::is_move_constructible<E>::value &&
+                              std::is_void<decltype(
+                                (void)std::declval<expected<T, E>&>().swap(
+                                  std::declval<expected<T, E>&>()))>::value> * = nullptr>
 void swap(expected<T, E> &lhs,
           expected<T, E> &rhs) noexcept(noexcept(lhs.swap(rhs))) {
   lhs.swap(rhs);

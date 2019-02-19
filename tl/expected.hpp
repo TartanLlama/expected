@@ -224,6 +224,7 @@ template<typename E>
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     throw std::forward<E>(e);
 #else
+  (void)e;
   #ifdef _MSC_VER
     __assume(0);
   #else

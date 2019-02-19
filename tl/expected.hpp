@@ -286,7 +286,7 @@ using invoke_result = invoke_result_impl<F, void, Us...>;
 template <class F, class... Us>
 using invoke_result_t = typename invoke_result<F, Us...>::type;
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
+#if defined(_MSC_VER) && _MSC_VER <= 1900
 // TODO make a version which works with MSVC 2015
 template <class T, class U = T> struct is_swappable : std::true_type {};
 

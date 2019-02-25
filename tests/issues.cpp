@@ -107,6 +107,7 @@ TEST_CASE("Issue 43", "[issues.43]") {
 	result = tl::make_unexpected(std::string{ "foo" });
 }
 
+#if !(__GNUC__ <= 5)
 #include <memory>
 
   using MaybeDataPtr = tl::expected<int, std::unique_ptr<int>>;
@@ -125,3 +126,4 @@ TEST_CASE("Issue 49", "[issues.49]") {
   auto m = test(10)
     .and_then(test2);
 }
+#endif

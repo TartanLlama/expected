@@ -765,7 +765,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   }
 #endif
 
-  constexpr void destroy_val() {
+  TL_EXPECTED_11_CONSTEXPR void destroy_val() {
 	get().~T();
   }
 };
@@ -820,7 +820,7 @@ struct expected_operations_base<void, E> : expected_storage_base<void, E> {
   }
 #endif
 
-  constexpr void destroy_val() {
+  TL_EXPECTED_11_CONSTEXPR void destroy_val() {
 	  //no-op
   }
 };

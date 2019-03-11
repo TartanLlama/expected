@@ -254,4 +254,4 @@ install:
     - if [ "$CXX" = "clang++" ]; then export CXX="$COMPILER -stdlib=libc++"; fi
     - if [ "$CXX" = "g++" ]; then export CXX="$COMPILER"; fi
 
-script: mkdir build && cd build && cmake .. && make && ./tests
+script: mkdir build && cd build && cmake -DCXXSTD=$CXXSTD .. && make && ./tests

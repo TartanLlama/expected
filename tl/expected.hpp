@@ -1224,7 +1224,7 @@ public:
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR auto
-  and_then(F &&f) & -> decltype(and_then_impl(*this, std::forward<F>(f))) {
+  and_then(F &&f) & -> decltype(and_then_impl(std::declval<expected&>(), std::forward<F>(f))) {
     return and_then_impl(*this, std::forward<F>(f));
   }
 
@@ -1232,7 +1232,7 @@ public:
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) &&;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR auto and_then(F &&f) && -> decltype(
-      and_then_impl(std::move(*this), std::forward<F>(f))) {
+      and_then_impl(std::declval<expected&&>(), std::forward<F>(f))) {
     return and_then_impl(std::move(*this), std::forward<F>(f));
   }
 
@@ -1240,7 +1240,7 @@ public:
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &;
   template <class F>
   constexpr auto and_then(F &&f) const & -> decltype(
-      and_then_impl(*this, std::forward<F>(f))) {
+      and_then_impl(std::declval<expected const&>(), std::forward<F>(f))) {
     return and_then_impl(*this, std::forward<F>(f));
   }
 
@@ -1249,7 +1249,7 @@ public:
   /// \synopsis template <class F>\nconstexpr auto and_then(F &&f) const &&;
   template <class F>
   constexpr auto and_then(F &&f) const && -> decltype(
-      and_then_impl(std::move(*this), std::forward<F>(f))) {
+      and_then_impl(std::declval<expected const&&>(), std::forward<F>(f))) {
     return and_then_impl(std::move(*this), std::forward<F>(f));
   }
 #endif

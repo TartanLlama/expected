@@ -388,9 +388,9 @@ struct expected_storage_base {
     }
   }
   union {
-    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
+	char m_no_init;
   };
   bool m_has_val;
 };
@@ -429,9 +429,9 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
 
   ~expected_storage_base() = default;
   union {
-    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
+	char m_no_init;
   };
   bool m_has_val;
 };
@@ -475,9 +475,9 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
   }
 
   union {
-    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
+	char m_no_init;
   };
   bool m_has_val;
 };
@@ -519,9 +519,9 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
     }
   }
   union {
-    char m_no_init;
     T m_val;
     unexpected<E> m_unexpect;
+	char m_no_init;
   };
   bool m_has_val;
 };
@@ -550,8 +550,8 @@ template <class E> struct expected_storage_base<void, E, false, true> {
   ~expected_storage_base() = default;
   struct dummy {};
   union {
-    dummy m_val;
     unexpected<E> m_unexpect;
+	dummy m_val;
   };
   bool m_has_val;
 };
@@ -584,8 +584,8 @@ template <class E> struct expected_storage_base<void, E, false, false> {
   }
 
   union {
-    char m_dummy;
     unexpected<E> m_unexpect;
+	char m_dummy;
   };
   bool m_has_val;
 };

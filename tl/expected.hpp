@@ -1164,10 +1164,10 @@ class expected : private detail::expected_move_assign_base<T, E>,
 
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
-  const U &val() const {
+  constexpr const U &val() const {
     return this->m_val;
   }
-  const unexpected<E> &err() const { return this->m_unexpect; }
+  constexpr const unexpected<E> &err() const { return this->m_unexpect; }
 
   using impl_base = detail::expected_move_assign_base<T, E>;
   using ctor_base = detail::expected_default_ctor_base<T, E>;

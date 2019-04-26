@@ -26,7 +26,7 @@ conan_basic_setup()
     def build(self):
         cmake = self.configure_cmake()
         cmake.build()
-       
+
         if not tools.cross_building(self.settings):
             self.run('%s/bin/tests' % self.build_folder)
 

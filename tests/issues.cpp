@@ -110,17 +110,17 @@ TEST_CASE("Issue 43", "[issues.43]") {
 #if !(__GNUC__ <= 5)
 #include <memory>
 
-  using MaybeDataPtr = tl::expected<int, std::unique_ptr<int>>;
+using MaybeDataPtr = tl::expected<int, std::unique_ptr<int>>;
 
-  MaybeDataPtr test(int i) noexcept
-  {
-    return std::move(i);
-  }
+MaybeDataPtr test(int i) noexcept
+{
+  return std::move(i);
+}
 
-  MaybeDataPtr test2(int i) noexcept
-  {
-    return std::move(i);
-  }
+MaybeDataPtr test2(int i) noexcept
+{
+  return std::move(i);
+}
 
 TEST_CASE("Issue 49", "[issues.49]") {
   auto m = test(10)

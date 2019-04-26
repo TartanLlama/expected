@@ -23,6 +23,7 @@ if(EXPECTED_ENABLE_TESTS)
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/issues.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/bases.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/observers.cpp
+                   ${CMAKE_CURRENT_SOURCE_DIR}/tests/swap.cpp
                    ${CMAKE_CURRENT_SOURCE_DIR}/tests/constructors.cpp)
 
   add_executable(tests ${TEST_SOURCES})

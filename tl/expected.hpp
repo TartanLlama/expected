@@ -224,7 +224,6 @@ template<typename E>
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     throw std::forward<E>(e);
 #else
-  (void)e;
   #ifdef _MSC_VER
     __assume(0);
   #else
@@ -286,6 +285,79 @@ using invoke_result = invoke_result_impl<F, void, Us...>;
 
 template <class F, class... Us>
 using invoke_result_t = typename invoke_result<F, Us...>::type;
+
+#if defined(_MSC_VER) && _MSC_VER <= 1900
+// TODO make a version which works with MSVC 2015
+template <class T, class U = T> struct is_swappable : std::true_type {};
+
+template <class T, class U = T> struct is_nothrow_swappable : std::true_type {};
+#else
+// https://stackoverflow.com/questions/26744589/what-is-a-proper-way-to-implement-is-swappable-to-test-for-the-swappable-concept
+namespace swap_adl_tests {
+// if swap ADL finds this then it would call std::swap otherwise (same
+// signature)
+struct tag {};
+
+template <class T> tag swap(T &, T &);
+template <class T, std::size_t N> tag swap(T (&a)[N], T (&b)[N]);
+
+// helper functions to test if an unqualified swap is possible, and if it
+// becomes std::swap
+template <class, class> std::false_type can_swap(...) noexcept(false);
+template <class T, class U,
+          class = decltype(swap(std::declval<T &>(), std::declval<U &>()))>
+std::true_type can_swap(int) noexcept(noexcept(swap(std::declval<T &>(),
+                                                    std::declval<U &>())));
+
+template <class, class> std::false_type uses_std(...);
+template <class T, class U>
+std::is_same<decltype(swap(std::declval<T &>(), std::declval<U &>())), tag>
+uses_std(int);
+
+template <class T>
+struct is_std_swap_noexcept
+    : std::integral_constant<bool,
+                             std::is_nothrow_move_constructible<T>::value &&
+                                 std::is_nothrow_move_assignable<T>::value> {};
+
+template <class T, std::size_t N>
+struct is_std_swap_noexcept<T[N]> : is_std_swap_noexcept<T> {};
+
+template <class T, class U>
+struct is_adl_swap_noexcept
+    : std::integral_constant<bool, noexcept(can_swap<T, U>(0))> {};
+} // namespace swap_adl_tests
+
+template <class T, class U = T>
+struct is_swappable
+    : std::integral_constant<
+          bool,
+          decltype(detail::swap_adl_tests::can_swap<T, U>(0))::value &&
+              (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value ||
+               (std::is_move_assignable<T>::value &&
+                std::is_move_constructible<T>::value))> {};
+
+template <class T, std::size_t N>
+struct is_swappable<T[N], T[N]>
+    : std::integral_constant<
+          bool,
+          decltype(detail::swap_adl_tests::can_swap<T[N], T[N]>(0))::value &&
+              (!decltype(
+                   detail::swap_adl_tests::uses_std<T[N], T[N]>(0))::value ||
+               is_swappable<T, T>::value)> {};
+
+template <class T, class U = T>
+struct is_nothrow_swappable
+    : std::integral_constant<
+          bool,
+          is_swappable<T, U>::value &&
+              ((decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value
+                    &&detail::swap_adl_tests::is_std_swap_noexcept<T>::value) ||
+               (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value &&
+                    detail::swap_adl_tests::is_adl_swap_noexcept<T,
+                                                                 U>::value))> {
+};
+#endif
 #endif
 
 // Trait for checking if a type is a tl::expected
@@ -390,7 +462,7 @@ struct expected_storage_base {
   union {
     T m_val;
     unexpected<E> m_unexpect;
-	char m_no_init;
+    char m_no_init;
   };
   bool m_has_val;
 };
@@ -431,7 +503,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
   union {
     T m_val;
     unexpected<E> m_unexpect;
-	char m_no_init;
+    char m_no_init;
   };
   bool m_has_val;
 };
@@ -477,7 +549,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
   union {
     T m_val;
     unexpected<E> m_unexpect;
-	char m_no_init;
+    char m_no_init;
   };
   bool m_has_val;
 };
@@ -521,7 +593,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   union {
     T m_val;
     unexpected<E> m_unexpect;
-	char m_no_init;
+    char m_no_init;
   };
   bool m_has_val;
 };
@@ -551,7 +623,7 @@ template <class E> struct expected_storage_base<void, E, false, true> {
   struct dummy {};
   union {
     unexpected<E> m_unexpect;
-	dummy m_val;
+    dummy m_val;
   };
   bool m_has_val;
 };
@@ -585,7 +657,7 @@ template <class E> struct expected_storage_base<void, E, false, false> {
 
   union {
     unexpected<E> m_unexpect;
-	char m_dummy;
+    char m_dummy;
   };
   bool m_has_val;
 };
@@ -1157,10 +1229,10 @@ class expected : private detail::expected_move_assign_base<T, E>,
 
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
-  U &val() {
+  TL_EXPECTED_11_CONSTEXPR U &val() {
     return this->m_val;
   }
-  unexpected<E> &err() { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR unexpected<E> &err() { return this->m_unexpect; }
 
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
@@ -1642,14 +1714,14 @@ public:
 
       #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
-        ::new (valptr()) T(std::move(v));
+        ::new (valptr()) T(std::forward<U>(v));
         this->m_has_val = true;
       } catch (...) {
         err() = std::move(tmp);
         throw;
       }
       #else
-        ::new (valptr()) T(std::move(v));
+        ::new (valptr()) T(std::forward<U>(v));
         this->m_has_val = true;
       #endif
     }
@@ -1765,28 +1837,99 @@ public:
     }
   }
 
-  // TODO SFINAE
-  void swap(expected &rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value &&noexcept(
-          swap(std::declval<T &>(), std::declval<T &>())) &&
-      std::is_nothrow_move_constructible<E>::value &&
-      noexcept(swap(std::declval<E &>(), std::declval<E &>()))) {
+private:
+  using t_is_void = std::true_type;
+  using t_is_not_void = std::false_type;
+  using t_is_nothrow_move_constructible = std::true_type;
+  using move_constructing_t_can_throw = std::false_type;
+  using e_is_nothrow_move_constructible = std::true_type;
+  using move_constructing_e_can_throw = std::false_type;
+
+  void swap_where_both_have_value(expected &rhs, t_is_void) noexcept {
+    // swapping void is a no-op
+  }
+
+  void swap_where_both_have_value(expected &rhs, t_is_not_void) {
+    using std::swap;
+    swap(val(), rhs.val());
+  }
+
+  void swap_where_only_one_has_value(expected &rhs, t_is_void) noexcept(
+      std::is_nothrow_move_constructible<E>::value) {
+    ::new (errptr()) unexpected_type(std::move(rhs.err()));
+    rhs.err().~unexpected_type();
+    std::swap(this->m_has_val, rhs.m_has_val);
+  }
+
+  void swap_where_only_one_has_value(expected &rhs, t_is_not_void) {
+    swap_where_only_one_has_value_and_t_is_not_void(
+        rhs, typename std::is_nothrow_move_constructible<T>::type{},
+        typename std::is_nothrow_move_constructible<E>::type{});
+  }
+
+  void swap_where_only_one_has_value_and_t_is_not_void(
+      expected &rhs, t_is_nothrow_move_constructible,
+      e_is_nothrow_move_constructible) noexcept {
+    auto temp = std::move(val());
+    val().~T();
+    ::new (errptr()) unexpected_type(std::move(rhs.err()));
+    rhs.err().~unexpected_type();
+    ::new (rhs.valptr()) T(std::move(temp));
+    std::swap(this->m_has_val, rhs.m_has_val);
+  }
+
+  void swap_where_only_one_has_value_and_t_is_not_void(
+      expected &rhs, t_is_nothrow_move_constructible,
+      move_constructing_e_can_throw) {
+    auto temp = std::move(val());
+    val().~T();
+    try {
+      ::new (errptr()) unexpected_type(std::move(rhs.err()));
+      rhs.err().~unexpected_type();
+      ::new (rhs.valptr()) T(std::move(temp));
+      std::swap(this->m_has_val, rhs.m_has_val);
+    } catch (...) {
+      val() = std::move(temp);
+      throw;
+    }
+  }
+
+  void swap_where_only_one_has_value_and_t_is_not_void(
+      expected &rhs, move_constructing_t_can_throw,
+      t_is_nothrow_move_constructible) {
+    auto temp = std::move(rhs.err());
+    rhs.err().~unexpected_type();
+    try {
+      ::new (rhs.valptr()) T(val());
+      val().~T();
+      ::new (errptr()) unexpected_type(std::move(temp));
+      std::swap(this->m_has_val, rhs.m_has_val);
+    } catch (...) {
+      rhs.err() = std::move(temp);
+      throw;
+    }
+  }
+
+public:
+  template <class OT = T, class OE = E>
+  detail::enable_if_t<detail::is_swappable<OT>::value &&
+                      detail::is_swappable<OE>::value &&
+                      (std::is_nothrow_move_constructible<OT>::value ||
+                       std::is_nothrow_move_constructible<OE>::value)>
+  swap(expected &rhs) noexcept(
+      std::is_nothrow_move_constructible<T>::value
+          &&detail::is_nothrow_swappable<T>::value
+              &&std::is_nothrow_move_constructible<E>::value
+                  &&detail::is_nothrow_swappable<E>::value) {
     if (has_value() && rhs.has_value()) {
-      using std::swap;
-      swap(val(), rhs.val());
+      swap_where_both_have_value(rhs, typename std::is_void<T>::type{});
     } else if (!has_value() && rhs.has_value()) {
+      rhs.swap(*this);
+    } else if (has_value()) {
+      swap_where_only_one_has_value(rhs, typename std::is_void<T>::type{});
+    } else {
       using std::swap;
       swap(err(), rhs.err());
-    } else if (has_value()) {
-      auto temp = std::move(rhs.err());
-      ::new (rhs.valptr()) T(val());
-      ::new (errptr()) unexpected_type(std::move(temp));
-      std::swap(this->m_has_val, rhs.m_has_val);
-    } else {
-      auto temp = std::move(this->err());
-      ::new (valptr()) T(rhs.val());
-      ::new (errptr()) unexpected_type(std::move(temp));
-      std::swap(this->m_has_val, rhs.m_has_val);
     }
   }
 
@@ -2269,10 +2412,12 @@ constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
   return x.has_value() ? true : x.error() != e.value();
 }
 
-// TODO is_swappable
 template <class T, class E,
-          detail::enable_if_t<std::is_move_constructible<T>::value &&
-                              std::is_move_constructible<E>::value> * = nullptr>
+          detail::enable_if_t<(std::is_void<T>::value ||
+                               std::is_move_constructible<T>::value) &&
+                              detail::is_swappable<T>::value &&
+                              std::is_move_constructible<E>::value &&
+                              detail::is_swappable<E>::value> * = nullptr>
 void swap(expected<T, E> &lhs,
           expected<T, E> &rhs) noexcept(noexcept(lhs.swap(rhs))) {
   lhs.swap(rhs);

@@ -3,7 +3,8 @@
 tl::expected<int, const char*> maybe_do_something(int i) {
   if (i < 5) {
     return 0;
-  } else {
+  }
+  else {
     return tl::make_unexpected("Uh oh");
   }
 }

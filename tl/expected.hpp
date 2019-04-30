@@ -153,68 +153,53 @@ public:
 
   constexpr explicit unexpected(E &&e) : m_val(std::move(e)) {}
 
-  /// \returns the contained value
-  /// \group unexpected_value
+  /// Returns the contained value
   constexpr const E &value() const & { return m_val; }
-  /// \group unexpected_value
   TL_EXPECTED_11_CONSTEXPR E &value() & { return m_val; }
-  /// \group unexpected_value
   TL_EXPECTED_11_CONSTEXPR E &&value() && { return std::move(m_val); }
-  /// \exclude
   constexpr const E &&value() const && { return std::move(m_val); }
 
 private:
   E m_val;
 };
 
-/// \brief Compares two unexpected objects
-/// \details Simply compares lhs.value() to rhs.value()
-/// \group unexpected_relop
+/// Compares two unexpected objects
 template <class E>
 constexpr bool operator==(const unexpected<E> &lhs, const unexpected<E> &rhs) {
   return lhs.value() == rhs.value();
 }
-/// \group unexpected_relop
 template <class E>
 constexpr bool operator!=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
   return lhs.value() != rhs.value();
 }
-/// \group unexpected_relop
 template <class E>
 constexpr bool operator<(const unexpected<E> &lhs, const unexpected<E> &rhs) {
   return lhs.value() < rhs.value();
 }
-/// \group unexpected_relop
 template <class E>
 constexpr bool operator<=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
   return lhs.value() <= rhs.value();
 }
-/// \group unexpected_relop
 template <class E>
 constexpr bool operator>(const unexpected<E> &lhs, const unexpected<E> &rhs) {
   return lhs.value() > rhs.value();
 }
-/// \group unexpected_relop
 template <class E>
 constexpr bool operator>=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
   return lhs.value() >= rhs.value();
 }
 
 /// Create an `unexpected` from `e`, deducing the return type
-///
-/// *Example:*
-/// auto e1 = tl::make_unexpected(42);
-/// unexpected<int> e2 (42); //same semantics
 template <class E>
 unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
   return unexpected<typename std::decay<E>::type>(std::forward<E>(e));
 }
 
-/// \brief A tag type to tell expected to construct the unexpected value
+/// A tag type to tell expected to construct the unexpected value
 struct unexpect_t {
   unexpect_t() = default;
 };
-/// \brief A tag to tell expected to construct the unexpected value
+/// A tag to tell expected to construct the unexpected value
 static constexpr unexpect_t unexpect{};
 
 /// \exclude
@@ -1329,66 +1314,33 @@ public:
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
     !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
-  /// \brief Carries out some operation on the stored object if there is one.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. If `U` is `void`, returns an `expected<monostate,E>, otherwise
-  //  returns an `expected<U,E>`. If `*this` is unexpected, the
-  /// result is `*this`, otherwise an `expected<U,E>` is constructed from the
-  /// return value of `std::invoke(std::forward<F>(f), value())` and is
-  /// returned.
-  ///
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) &;
-  template <class F> TL_EXPECTED_11_CONSTEXPR auto map(F &&f) & {
+  /// Carries out some operation on the stored object if there is one.
+    template <class F> TL_EXPECTED_11_CONSTEXPR auto map(F &&f) & {
     return expected_map_impl(*this, std::forward<F>(f));
   }
-
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F> TL_EXPECTED_11_CONSTEXPR auto map(F &&f) && {
     return expected_map_impl(std::move(*this), std::forward<F>(f));
   }
-
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) const &;
   template <class F> constexpr auto map(F &&f) const & {
     return expected_map_impl(*this, std::forward<F>(f));
   }
-
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) const &&;
   template <class F> constexpr auto map(F &&f) const && {
     return expected_map_impl(std::move(*this), std::forward<F>(f));
   }
 #else
-  /// \brief Carries out some operation on the stored object if there is one.
-  /// \returns Let `U` be the result of `std::invoke(std::forward<F>(f),
-  /// value())`. If `U` is `void`, returns an `expected<monostate,E>, otherwise
-  //  returns an `expected<U,E>`. If `*this` is unexpected, the
-  /// result is `*this`, otherwise an `expected<U,E>` is constructed from the
-  /// return value of `std::invoke(std::forward<F>(f), value())` and is
-  /// returned.
-  ///
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) &;
+  /// Carries out some operation on the stored object if there is one.
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(
       expected_map_impl(std::declval<expected &>(), std::declval<F &&>()))
   map(F &&f) & {
     return expected_map_impl(*this, std::forward<F>(f));
   }
-
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) &&;
   template <class F>
   TL_EXPECTED_11_CONSTEXPR decltype(
       expected_map_impl(std::declval<expected>(), std::declval<F &&>()))
   map(F &&f) && {
     return expected_map_impl(std::move(*this), std::forward<F>(f));
   }
-
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) const &;
   template <class F>
   constexpr decltype(expected_map_impl(std::declval<const expected &>(),
                                        std::declval<F &&>()))
@@ -1397,12 +1349,56 @@ public:
   }
 
 #ifndef TL_EXPECTED_NO_CONSTRR
-  /// \group map
-  /// \synopsis template <class F> constexpr auto map(F &&f) const &&;
   template <class F>
   constexpr decltype(expected_map_impl(std::declval<const expected &&>(),
                                        std::declval<F &&>()))
   map(F &&f) const && {
+    return expected_map_impl(std::move(*this), std::forward<F>(f));
+  }
+#endif
+#endif
+
+#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
+    !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
+  /// Carries out some operation on the stored object if there is one.
+    template <class F> TL_EXPECTED_11_CONSTEXPR auto transform(F &&f) & {
+    return expected_map_impl(*this, std::forward<F>(f));
+  }
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto transform(F &&f) && {
+    return expected_map_impl(std::move(*this), std::forward<F>(f));
+  }
+  template <class F> constexpr auto transform(F &&f) const & {
+    return expected_map_impl(*this, std::forward<F>(f));
+  }
+  template <class F> constexpr auto transform(F &&f) const && {
+    return expected_map_impl(std::move(*this), std::forward<F>(f));
+  }
+#else
+  /// Carries out some operation on the stored object if there is one.
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(
+      expected_map_impl(std::declval<expected &>(), std::declval<F &&>()))
+  transform(F &&f) & {
+    return expected_map_impl(*this, std::forward<F>(f));
+  }
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(
+      expected_map_impl(std::declval<expected>(), std::declval<F &&>()))
+  transform(F &&f) && {
+    return expected_map_impl(std::move(*this), std::forward<F>(f));
+  }
+  template <class F>
+  constexpr decltype(expected_map_impl(std::declval<const expected &>(),
+                                       std::declval<F &&>()))
+  transform(F &&f) const & {
+    return expected_map_impl(*this, std::forward<F>(f));
+  }
+
+#ifndef TL_EXPECTED_NO_CONSTRR
+  template <class F>
+  constexpr decltype(expected_map_impl(std::declval<const expected &&>(),
+                                       std::declval<F &&>()))
+  transform(F &&f) const && {
     return expected_map_impl(std::move(*this), std::forward<F>(f));
   }
 #endif

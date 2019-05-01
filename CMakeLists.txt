@@ -1,12 +1,14 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.8)
 
-project(expected)
+project(tl-expected VERSION 1.0.0 LANGUAGES CXX)
 
 option(EXPECTED_ENABLE_TESTS "Enable tests." ON)
 
-add_library(expected INTERFACE)
-target_sources(expected INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tl/expected.hpp)
-target_include_directories(expected INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tl)
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/tl-cmake" ${CMAKE_MODULE_PATH})
+include(add-tl)
+
+tl_add_library(expected SOURCES 
+               include/tl/expected.hpp)
 
 # Prepare "Catch" library for other executables
 set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)

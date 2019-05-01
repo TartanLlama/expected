@@ -12,8 +12,8 @@ class ExpectedConan(ConanFile):
     exports_sources = "*"
 
     def source(self):
-        tools.replace_in_file('CMakeLists.txt', 'project(expected)',
-        '''project(expected)
+        tools.replace_in_file('CMakeLists.txt', 'project(tl-expected)',
+        '''project(tl-expected)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
         ''')
@@ -31,4 +31,4 @@ conan_basic_setup()
             self.run('%s/bin/tests' % self.build_folder)
 
     def package(self):
-        self.copy('*.hpp', dst='include/tl', src='tl')
+        self.copy('*.hpp', dst='include/tl', src='include/tl')

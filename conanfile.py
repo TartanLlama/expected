@@ -7,28 +7,11 @@ class ExpectedConan(ConanFile):
     author = "Simon Brand <tartanllama@gmail.com>"
     url = "https://github.com/TartanLlama/expected"
     description = "C++11/14/17 std::expected with functional-style extensions"
-    settings = "os", "compiler", "build_type", "arch"
-    generators = "cmake"
     exports_sources = "*"
-
-    def source(self):
-        tools.replace_in_file('CMakeLists.txt', 'project(expected)',
-        '''project(expected)
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
-        ''')
-
-    def configure_cmake(self):
-        cmake = CMake(self)
-        cmake.configure()
-        return cmake
-
-    def build(self):
-        cmake = self.configure_cmake()
-        cmake.build()
-
-        if not tools.cross_building(self.settings):
-            self.run('%s/bin/tests' % self.build_folder)
+    no_copy_source = True
 
     def package(self):
         self.copy('*.hpp', dst='include/tl', src='tl')
+
+    def package_id(self):
+        self.info.header_only()

@@ -3,6 +3,7 @@ os:
 - Visual Studio 2017
 
 build_script:
+  - git submodule update --init --recursive
   - mkdir build
   - cd build
   - cmake ..

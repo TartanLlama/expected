@@ -1849,7 +1849,7 @@ private:
   using e_is_nothrow_move_constructible = std::true_type;
   using move_constructing_e_can_throw = std::false_type;
 
-  void swap_where_both_have_value(expected &rhs, t_is_void) noexcept {
+  void swap_where_both_have_value(expected &/*rhs*/ , t_is_void) noexcept {
     // swapping void is a no-op
   }
 

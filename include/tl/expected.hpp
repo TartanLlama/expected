@@ -751,12 +751,16 @@ struct expected_operations_base : expected_storage_base<T, E> {
       auto tmp = std::move(geterr());
       geterr().~unexpected<E>();
 
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
         construct(rhs.get());
       } catch (...) {
         geterr() = std::move(tmp);
         throw;
       }
+#else
+      construct(rhs.get());
+#endif
     } else {
       assign_common(rhs);
     }
@@ -782,12 +786,16 @@ struct expected_operations_base : expected_storage_base<T, E> {
     if (!this->m_has_val && rhs.m_has_val) {
       auto tmp = std::move(geterr());
       geterr().~unexpected<E>();
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
         construct(std::move(rhs).get());
       } catch (...) {
         geterr() = std::move(tmp);
         throw;
       }
+#else
+      construct(std::move(rhs).get());
+#endif
     } else {
       assign_common(std::move(rhs));
     }
@@ -1911,6 +1919,7 @@ private:
       move_constructing_e_can_throw) {
     auto temp = std::move(val());
     val().~T();
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     try {
       ::new (errptr()) unexpected_type(std::move(rhs.err()));
       rhs.err().~unexpected_type();
@@ -1920,6 +1929,12 @@ private:
       val() = std::move(temp);
       throw;
     }
+#else
+    ::new (errptr()) unexpected_type(std::move(rhs.err()));
+    rhs.err().~unexpected_type();
+    ::new (rhs.valptr()) T(std::move(temp));
+    std::swap(this->m_has_val, rhs.m_has_val);
+#endif
   }
 
   void swap_where_only_one_has_value_and_t_is_not_void(
@@ -1927,6 +1942,7 @@ private:
       t_is_nothrow_move_constructible) {
     auto temp = std::move(rhs.err());
     rhs.err().~unexpected_type();
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     try {
       ::new (rhs.valptr()) T(val());
       val().~T();
@@ -1936,6 +1952,12 @@ private:
       rhs.err() = std::move(temp);
       throw;
     }
+#else
+    ::new (rhs.valptr()) T(val());
+    val().~T();
+    ::new (errptr()) unexpected_type(std::move(temp));
+    std::swap(this->m_has_val, rhs.m_has_val);
+#endif
   }
 
 public:

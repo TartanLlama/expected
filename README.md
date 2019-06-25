@@ -42,8 +42,6 @@ tl::expected<image,fail_reason> get_cute_cat (const image& img) {
 }
 ```
 
-Full documentation available at [expected.tartanllama.xyz](https://expected.tartanllama.xyz)
-
 The interface is the same as `std::expected` as proposed in [p0323r3](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0323r3.pdf), but the following member functions are also defined. Explicit types are for clarity.
 
 - `map`: carries out some operation on the stored object if there is one.

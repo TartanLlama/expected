@@ -4,7 +4,16 @@ project(tl-expected VERSION 1.0.0 LANGUAGES CXX)
 
 option(EXPECTED_ENABLE_TESTS "Enable tests." ON)
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/tl-cmake" ${CMAKE_MODULE_PATH})
+include(FetchContent)
+FetchContent_Declare(
+  tl_cmake
+  GIT_REPOSITORY https://github.com/TartanLlama/tl-cmake.git
+)
+FetchContent_GetProperties(tl_cmake)
+if(NOT tl_cmake_POPULATED)
+  FetchContent_Populate(tl_cmake)
+  set(CMAKE_MODULE_PATH ${tl_cmake_SOURCE_DIR} ${CMAKE_MODULE_PATH})
+endif()
 include(add-tl)
 
 tl_add_library(expected SOURCES 

@@ -1,6 +1,6 @@
 language: cpp
 
-dist: trusty
+dist: xenial
 sudo: false
 
 matrix:
@@ -97,7 +97,7 @@ matrix:
       addons:
         apt:
           sources:
-            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main"
               key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
             - ubuntu-toolchain-r-test
           packages:
@@ -108,7 +108,7 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-trusty-4.0
+             - llvm-toolchain-xenial-4.0
              - ubuntu-toolchain-r-test
           packages:
              - clang++-4.0
@@ -118,7 +118,7 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-trusty-5.0
+             - llvm-toolchain-xenial-5.0
              - ubuntu-toolchain-r-test
           packages:
              - clang++-5.0
@@ -128,7 +128,7 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-trusty-6.0
+             - llvm-toolchain-xenial-6.0
              - ubuntu-toolchain-r-test
           packages:
              - clang++-6.0
@@ -211,7 +211,7 @@ matrix:
       addons:
         apt:
           sources:
-            - sourceline: "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main"
               key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
             - ubuntu-toolchain-r-test
           packages:
@@ -222,7 +222,7 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-trusty-4.0
+             - llvm-toolchain-xenial-4.0
              - ubuntu-toolchain-r-test
           packages:
              - clang++-4.0
@@ -232,7 +232,7 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-trusty-5.0
+             - llvm-toolchain-xenial-5.0
              - ubuntu-toolchain-r-test
           packages:
              - clang++-5.0
@@ -242,7 +242,7 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-trusty-6.0
+             - llvm-toolchain-xenial-6.0
              - ubuntu-toolchain-r-test
           packages:
              - clang++-6.0

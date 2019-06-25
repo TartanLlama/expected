@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "expected.hpp"
+#include <tl/expected.hpp>
 
 TEST_CASE("Simple assignment", "[assignment.simple]") {
   tl::expected<int, int> e1 = 42;

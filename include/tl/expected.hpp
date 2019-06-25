@@ -14,8 +14,9 @@
 #ifndef TL_EXPECTED_HPP
 #define TL_EXPECTED_HPP
 
-#define TL_EXPECTED_VERSION_MAJOR 0
-#define TL_EXPECTED_VERSION_MINOR 2
+#define TL_EXPECTED_VERSION_MAJOR 1
+#define TL_EXPECTED_VERSION_MINOR 0
+#define TL_EXPECTED_VERSION_PATCH 0
 
 #include <exception>
 #include <functional>
@@ -234,24 +235,55 @@ template <class...> struct conjunction : std::true_type {};
 template <class B> struct conjunction<B> : B {};
 template <class B, class... Bs>
 struct conjunction<B, Bs...>
-    : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
+  : std::conditional<bool(B::value), conjunction<Bs...>, B>::type {};
+
+#if defined(_LIBCPP_VERSION) && __cplusplus == 201103L
+#define TL_TRAITS_LIBCXX_MEM_FN_WORKAROUND
+#endif
+
+// In C++11 mode, there's an issue in libc++'s std::mem_fn
+// which results in a hard-error when using it in a noexcept expression
+// in some cases. This is a check to workaround the common failing case.
+#ifdef TL_TRAITS_LIBCXX_MEM_FN_WORKAROUND
+template <class T> struct is_pointer_to_non_const_member_func : std::false_type {};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret(T::*) (Args...)> : std::true_type {};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret(T::*) (Args...)&> : std::true_type {};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret(T::*) (Args...) &&> : std::true_type {};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret(T::*) (Args...) volatile> : std::true_type {};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret(T::*) (Args...) volatile &> : std::true_type {};
+template <class T, class Ret, class... Args>
+struct is_pointer_to_non_const_member_func<Ret(T::*) (Args...) volatile &&> : std::true_type {};
+
+template <class T> struct is_const_or_const_ref : std::false_type {};
+template <class T> struct is_const_or_const_ref<T const&> : std::true_type {};
+template <class T> struct is_const_or_const_ref<T const> : std::true_type {};
+#endif
 
 // std::invoke from C++17
 // https://stackoverflow.com/questions/38288042/c11-14-invoke-workaround
 template <typename Fn, typename... Args,
-          typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>{}>,
-          int = 0>
-constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
+#ifdef TL_TRAITS_LIBCXX_MEM_FN_WORKAROUND
+  typename = enable_if_t<!(is_pointer_to_non_const_member_func<Fn>::value
+    && is_const_or_const_ref<Args...>::value)>,
+#endif
+  typename = enable_if_t<std::is_member_pointer<decay_t<Fn>>::value>,
+  int = 0>
+  constexpr auto invoke(Fn && f, Args && ... args) noexcept(
     noexcept(std::mem_fn(f)(std::forward<Args>(args)...)))
-    -> decltype(std::mem_fn(f)(std::forward<Args>(args)...)) {
+  -> decltype(std::mem_fn(f)(std::forward<Args>(args)...)) {
   return std::mem_fn(f)(std::forward<Args>(args)...);
 }
 
 template <typename Fn, typename... Args,
-          typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>{}>>
-constexpr auto invoke(Fn &&f, Args &&... args) noexcept(
+  typename = enable_if_t<!std::is_member_pointer<decay_t<Fn>>::value>>
+  constexpr auto invoke(Fn && f, Args && ... args) noexcept(
     noexcept(std::forward<Fn>(f)(std::forward<Args>(args)...)))
-    -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
+  -> decltype(std::forward<Fn>(f)(std::forward<Args>(args)...)) {
   return std::forward<Fn>(f)(std::forward<Args>(args)...);
 }
 
@@ -260,8 +292,8 @@ template <class F, class, class... Us> struct invoke_result_impl;
 
 template <class F, class... Us>
 struct invoke_result_impl<
-    F, decltype(detail::invoke(std::declval<F>(), std::declval<Us>()...), void()),
-    Us...> {
+  F, decltype(detail::invoke(std::declval<F>(), std::declval<Us>()...), void()),
+  Us...> {
   using type = decltype(detail::invoke(std::declval<F>(), std::declval<Us>()...));
 };
 
@@ -279,68 +311,68 @@ template <class T, class U = T> struct is_nothrow_swappable : std::true_type {};
 #else
 // https://stackoverflow.com/questions/26744589/what-is-a-proper-way-to-implement-is-swappable-to-test-for-the-swappable-concept
 namespace swap_adl_tests {
-// if swap ADL finds this then it would call std::swap otherwise (same
-// signature)
-struct tag {};
+  // if swap ADL finds this then it would call std::swap otherwise (same
+  // signature)
+  struct tag {};
 
-template <class T> tag swap(T &, T &);
-template <class T, std::size_t N> tag swap(T (&a)[N], T (&b)[N]);
+  template <class T> tag swap(T&, T&);
+  template <class T, std::size_t N> tag swap(T(&a)[N], T(&b)[N]);
 
-// helper functions to test if an unqualified swap is possible, and if it
-// becomes std::swap
-template <class, class> std::false_type can_swap(...) noexcept(false);
-template <class T, class U,
-          class = decltype(swap(std::declval<T &>(), std::declval<U &>()))>
-std::true_type can_swap(int) noexcept(noexcept(swap(std::declval<T &>(),
-                                                    std::declval<U &>())));
+  // helper functions to test if an unqualified swap is possible, and if it
+  // becomes std::swap
+  template <class, class> std::false_type can_swap(...) noexcept(false);
+  template <class T, class U,
+    class = decltype(swap(std::declval<T&>(), std::declval<U&>()))>
+    std::true_type can_swap(int) noexcept(noexcept(swap(std::declval<T&>(),
+      std::declval<U&>())));
 
-template <class, class> std::false_type uses_std(...);
-template <class T, class U>
-std::is_same<decltype(swap(std::declval<T &>(), std::declval<U &>())), tag>
-uses_std(int);
+  template <class, class> std::false_type uses_std(...);
+  template <class T, class U>
+  std::is_same<decltype(swap(std::declval<T&>(), std::declval<U&>())), tag>
+    uses_std(int);
 
-template <class T>
-struct is_std_swap_noexcept
+  template <class T>
+  struct is_std_swap_noexcept
     : std::integral_constant<bool,
-                             std::is_nothrow_move_constructible<T>::value &&
-                                 std::is_nothrow_move_assignable<T>::value> {};
+    std::is_nothrow_move_constructible<T>::value&&
+    std::is_nothrow_move_assignable<T>::value> {};
 
-template <class T, std::size_t N>
-struct is_std_swap_noexcept<T[N]> : is_std_swap_noexcept<T> {};
+  template <class T, std::size_t N>
+  struct is_std_swap_noexcept<T[N]> : is_std_swap_noexcept<T> {};
 
-template <class T, class U>
-struct is_adl_swap_noexcept
+  template <class T, class U>
+  struct is_adl_swap_noexcept
     : std::integral_constant<bool, noexcept(can_swap<T, U>(0))> {};
 } // namespace swap_adl_tests
 
 template <class T, class U = T>
 struct is_swappable
-    : std::integral_constant<
-          bool,
-          decltype(detail::swap_adl_tests::can_swap<T, U>(0))::value &&
-              (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value ||
-               (std::is_move_assignable<T>::value &&
-                std::is_move_constructible<T>::value))> {};
+  : std::integral_constant<
+  bool,
+  decltype(detail::swap_adl_tests::can_swap<T, U>(0))::value &&
+  (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value ||
+  (std::is_move_assignable<T>::value &&
+    std::is_move_constructible<T>::value))> {};
 
 template <class T, std::size_t N>
 struct is_swappable<T[N], T[N]>
-    : std::integral_constant<
-          bool,
-          decltype(detail::swap_adl_tests::can_swap<T[N], T[N]>(0))::value &&
-              (!decltype(
-                   detail::swap_adl_tests::uses_std<T[N], T[N]>(0))::value ||
-               is_swappable<T, T>::value)> {};
+  : std::integral_constant<
+  bool,
+  decltype(detail::swap_adl_tests::can_swap<T[N], T[N]>(0))::value &&
+  (!decltype(
+    detail::swap_adl_tests::uses_std<T[N], T[N]>(0))::value ||
+    is_swappable<T, T>::value)> {};
 
 template <class T, class U = T>
 struct is_nothrow_swappable
-    : std::integral_constant<
-          bool,
-          is_swappable<T, U>::value &&
-              ((decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value
-                    &&detail::swap_adl_tests::is_std_swap_noexcept<T>::value) ||
-               (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value &&
-                    detail::swap_adl_tests::is_adl_swap_noexcept<T,
-                                                                 U>::value))> {
+  : std::integral_constant<
+  bool,
+  is_swappable<T, U>::value &&
+  ((decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value
+    && detail::swap_adl_tests::is_std_swap_noexcept<T>::value) ||
+    (!decltype(detail::swap_adl_tests::uses_std<T, U>(0))::value &&
+      detail::swap_adl_tests::is_adl_swap_noexcept<T,
+      U>::value))> {
 };
 #endif
 #endif
@@ -2442,5 +2474,4 @@ void swap(expected<T, E> &lhs,
 }
 } // namespace tl
 
-#define TL_OPTIONAL_EXPECTED_MUTEX
 #endif

@@ -1,0 +1,3 @@
+[submodule "cmake/tl-cmake"]
+	path = cmake/tl-cmake
+	url = https://github.com/TartanLlama/tl-cmake.git

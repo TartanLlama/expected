@@ -5,6 +5,8 @@ Single header implementation of `std::expected` with functional-style extensions
 Clang + GCC: [![Linux Build Status](https://travis-ci.org/TartanLlama/expected.png?branch=master)](https://travis-ci.org/TartanLlama/expected)
 MSVC: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/k5x00xa11y3s5wsg?svg=true)](https://ci.appveyor.com/project/TartanLlama/expected)
 
+Available on [Vcpkg](https://github.com/microsoft/vcpkg/tree/master/ports/tl-expected) and [Conan](https://github.com/yipdw/conan-tl-expected).
+
 [`std::expected`](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0323r3.pdf) is proposed as the preferred way to represent object which will either have an expected value, or an unexpected value giving information about why something failed. Unfortunately, chaining together many computations which may fail can be verbose, as error-checking code will be mixed in with the actual programming logic. This implementation provides a number of utilities to make coding with `expected` cleaner.
 
 For example, instead of writing this code:

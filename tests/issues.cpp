@@ -127,3 +127,12 @@ TEST_CASE("Issue 49", "[issues.49]") {
     .and_then(test2);
 }
 #endif
+
+tl::expected<int, std::unique_ptr<std::string>> func()
+{
+  return 1;
+}
+
+TEST_CASE("Issue 61", "[issues.61]") {
+  REQUIRE(func().value() == 1);
+}

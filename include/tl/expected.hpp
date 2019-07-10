@@ -18,7 +18,7 @@
 
 #define TL_EXPECTED_VERSION_MAJOR 1
 #define TL_EXPECTED_VERSION_MINOR 0
-#define TL_EXPECTED_VERSION_PATCH 0
+#define TL_EXPECTED_VERSION_PATCH 1
 
 #include <exception>
 #include <functional>
@@ -1907,14 +1907,14 @@ public:
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR const U &&value() const && {
     if (!has_value())
-      detail::throw_exception(bad_expected_access<E>(err().value()));
+      detail::throw_exception(bad_expected_access<E>(std::move(err()).value()));
     return std::move(val());
   }
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR U &&value() && {
     if (!has_value())
-      detail::throw_exception(bad_expected_access<E>(err().value()));
+      detail::throw_exception(bad_expected_access<E>(std::move(err()).value()));
     return std::move(val());
   }
 

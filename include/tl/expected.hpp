@@ -18,7 +18,7 @@
 
 #define TL_EXPECTED_VERSION_MAJOR 1
 #define TL_EXPECTED_VERSION_MINOR 0
-#define TL_EXPECTED_VERSION_PATCH 0
+#define TL_EXPECTED_VERSION_PATCH 1
 
 #include <exception>
 #include <functional>

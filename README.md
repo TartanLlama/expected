@@ -11,7 +11,7 @@ Available on [Vcpkg](https://github.com/microsoft/vcpkg/tree/master/ports/tl-exp
 
 For example, instead of writing this code:
 
-```
+```cpp
 std::expected<image,fail_reason> get_cute_cat (const image& img) {
     auto cropped = crop_to_cat(img);
     if (!cropped) {
@@ -34,7 +34,7 @@ std::expected<image,fail_reason> get_cute_cat (const image& img) {
 
 You can do this:
 
-```
+```cpp
 tl::expected<image,fail_reason> get_cute_cat (const image& img) {
     return crop_to_cat(img)
            .and_then(add_bow_tie)

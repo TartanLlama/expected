@@ -7,7 +7,7 @@ option(EXPECTED_ENABLE_TESTS "Enable tests." ON)
 include(FetchContent)
 FetchContent_Declare(
   tl_cmake
-  GIT_REPOSITORY https://github.com/TartanLlama/tl-cmake.git
+  URL https://github.com/TartanLlama/tl-cmake/archive/master.zip
 )
 FetchContent_GetProperties(tl_cmake)
 if(NOT tl_cmake_POPULATED)

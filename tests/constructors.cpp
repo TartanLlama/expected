@@ -1,8 +1,8 @@
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 #include <tl/expected.hpp>
 
-#include <vector>
 #include <type_traits>
+#include <vector>
 #include <string>
 
 struct takes_init_and_variadic {

@@ -1,7 +1,6 @@
 language: cpp
 
 dist: xenial
-sudo: false
 
 matrix:
   include:
@@ -87,8 +86,9 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-precise-3.8
-             - ubuntu-toolchain-r-test
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.8 main"
+              key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
+            - ubuntu-toolchain-r-test
           packages:
              - clang++-3.8
              - libc++-dev
@@ -201,8 +201,9 @@ matrix:
       addons:
         apt:
           sources:
-             - llvm-toolchain-precise-3.8
-             - ubuntu-toolchain-r-test
+            - sourceline: "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.8 main"
+              key_url: "http://apt.llvm.org/llvm-snapshot.gpg.key"
+            - ubuntu-toolchain-r-test
           packages:
              - clang++-3.8
              - libc++-dev
@@ -249,9 +250,19 @@ matrix:
              - libc++-dev
       env: COMPILER=clang++-6.0 CXXSTD=14      
       
+before_install:
+  - sudo apt update
+  - sudo apt install -y apt-transport-https ca-certificates gnupg software-properties-common 
+  - curl -L https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo apt-key add -
+  - sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ xenial main' 
+  - sudo apt update
 
 install:
-    - if [ "$CXX" = "clang++" ]; then export CXX="$COMPILER -stdlib=libc++"; fi
-    - if [ "$CXX" = "g++" ]; then export CXX="$COMPILER"; fi
+  - if [ "$CXX" = "clang++" ]; then export CXX="$COMPILER -stdlib=libc++"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="$COMPILER"; fi
+  - sudo apt install -y cmake
 
-script: mkdir build && cd build && cmake -DCXXSTD=$CXXSTD .. && make && ./tests
+script:
+  - /usr/bin/cmake -B build -S . "-DCMAKE_CXX_STANDARD=$CXXSTD"
+  - /usr/bin/cmake --build build
+  - /usr/bin/cmake --build build --target test

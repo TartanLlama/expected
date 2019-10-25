@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 #include <tl/expected.hpp>
 
 #define TOKENPASTE(x, y) x##y

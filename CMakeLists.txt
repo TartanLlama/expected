@@ -32,7 +32,7 @@ target_include_directories(expected
     $<INSTALL_INTERFACE:include>)
 
 if (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-  add_executable(tl::expected ALIAS expected)
+  add_library(tl::expected ALIAS expected)
 endif()
 
 # Installation help

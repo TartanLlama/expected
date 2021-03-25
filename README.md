@@ -80,12 +80,6 @@ Tested on:
   * MSVC 2015
   * MSVC 2017
 
-### Dependencies
-
-Requires [Standardese](https://github.com/foonathan/standardese) for generating documentation.
-
-Requires [Catch](https://github.com/philsquared/Catch) for testing. This is bundled in the test directory.
-
 ### Acknowledgements
 
 Thanks to [Kévin Alexandre Boissonneault](https://github.com/KABoissonneault) and [Björn Fahller](https://github.com/rollbear) for various bug fixes.
@@ -94,4 +88,4 @@ Thanks to [Kévin Alexandre Boissonneault](https://github.com/KABoissonneault) a
 
 [![CC0](http://i.creativecommons.org/p/zero/1.0/88x31.png)]("http://creativecommons.org/publicdomain/zero/1.0/")
 
-To the extent possible under law, [Simon Brand](https://twitter.com/TartanLlama) has waived all copyright and related or neighboring rights to the `expected` library. This work is published from: United Kingdom.
+To the extent possible under law, [Sy Brand](https://twitter.com/TartanLlama) has waived all copyright and related or neighboring rights to the `expected` library. This work is published from: United Kingdom.

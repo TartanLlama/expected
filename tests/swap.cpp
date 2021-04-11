@@ -91,10 +91,8 @@ TEST_CASE("swap") {
   tl::expected<no_throw, willthrow_move> b{tl::unexpect, s2};
   should_throw = 1;
 
-  #ifdef _MSC_VER
   //this seems to break catch on GCC and Clang
   REQUIRE_THROWS(swap(a, b));
-  #endif
 
   REQUIRE(a->i == s1);
   REQUIRE(b.error().i == s2);

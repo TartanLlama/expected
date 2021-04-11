@@ -1,3 +1,7 @@
+#include "../include/tl/expected.hpp"
+#include <string>
+
+
 struct no_throw {
   no_throw(std::string i) : i(i) {}
   std::string i;
@@ -27,6 +31,15 @@ int main() {
   std::string s2 = "zyxwvutsrqponmlkjihgfedcbaxxx";
   tl::expected<no_throw, willthrow_move> a{s1};
   tl::expected<no_throw, willthrow_move> b{tl::unexpect, s2};
-  should_throw = 1;
-  swap(a, b);
+  should_throw = true;
+  bool has_thrown = false;
+  try {
+    swap(a, b);
+  } catch (...) {
+    has_thrown = true;
+  }
+  if(should_throw == has_thrown){
+    return 0;
+  }
+  return 1;
 }

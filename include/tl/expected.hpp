@@ -1263,9 +1263,23 @@ public:
     return and_then_impl(*this, std::forward<F>(f));
   }
 
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto and_also(F &&f) & {
+    return and_also_impl(*this, std::forward<F>(f));
+  }
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto and_also(F &&f) && {
+    return and_also_impl(std::move(*this), std::forward<F>(f));
+  }
+  template <class F> constexpr auto and_also(F &&f) const & {
+    return and_also_impl(*this, std::forward<F>(f));
+  }
+
 #ifndef TL_EXPECTED_NO_CONSTRR
   template <class F> constexpr auto and_then(F &&f) const && {
     return and_then_impl(std::move(*this), std::forward<F>(f));
+  }
+
+  template <class F> constexpr auto and_also(F &&f) const && {
+    return and_also_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
 
@@ -1286,11 +1300,32 @@ public:
     return and_then_impl(*this, std::forward<F>(f));
   }
 
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR auto
+  and_also(F &&f) & -> decltype(and_also_impl(std::declval<expected&>(), std::forward<F>(f))) {
+    return and_also_impl(*this, std::forward<F>(f));
+  }
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR auto and_also(F &&f) && -> decltype(
+      and_also_impl(std::declval<expected&&>(), std::forward<F>(f))) {
+    return and_also_impl(std::move(*this), std::forward<F>(f));
+  }
+  template <class F>
+  constexpr auto and_also(F &&f) const & -> decltype(
+      and_also_impl(std::declval<expected const&>(), std::forward<F>(f))) {
+    return and_also_impl(*this, std::forward<F>(f));
+  }
+
 #ifndef TL_EXPECTED_NO_CONSTRR
   template <class F>
   constexpr auto and_then(F &&f) const && -> decltype(
       and_then_impl(std::declval<expected const&&>(), std::forward<F>(f))) {
     return and_then_impl(std::move(*this), std::forward<F>(f));
+  }
+  template <class F>
+  constexpr auto and_also(F &&f) const && -> decltype(
+      and_also_impl(std::declval<expected const&&>(), std::forward<F>(f))) {
+    return and_also_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
 #endif
@@ -1964,6 +1999,15 @@ constexpr auto and_then_impl(Exp &&exp, F &&f) {
   return exp.has_value() ? detail::invoke(std::forward<F>(f))
                          : Ret(unexpect, std::forward<Exp>(exp).error());
 }
+
+template <class Exp, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>()))>
+constexpr auto and_also_impl(Exp &&exp, F &&f) {
+  static_assert(detail::is_expected<Ret>::value, "F must return an expected");
+
+  return exp.has_value() ? detail::invoke(std::forward<F>(f))
+                         : Ret(unexpect, std::forward<Exp>(exp).error());
+}
 #else
 template <class> struct TC;
 template <class Exp, class F,
@@ -1982,6 +2026,15 @@ template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>())),
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr>
 constexpr auto and_then_impl(Exp &&exp, F &&f) -> Ret {
+  static_assert(detail::is_expected<Ret>::value, "F must return an expected");
+
+  return exp.has_value() ? detail::invoke(std::forward<F>(f))
+                         : Ret(unexpect, std::forward<Exp>(exp).error());
+}
+
+template <class Exp, class F,
+          class Ret = decltype(detail::invoke(std::declval<F>()))>
+constexpr auto and_also_impl(Exp &&exp, F &&f) -> Ret {
   static_assert(detail::is_expected<Ret>::value, "F must return an expected");
 
   return exp.has_value() ? detail::invoke(std::forward<F>(f))

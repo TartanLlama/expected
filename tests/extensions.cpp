@@ -368,6 +368,123 @@ TEST_CASE("And then extensions", "[extensions.and_then]") {
   }
 }
 
+TEST_CASE("And also extensions", "[extensions.and_also]") {
+  auto succeed = []() { return tl::expected<int, int>(21 * 2); };
+  auto fail = []() { return tl::expected<int, int>(tl::unexpect, 17); };
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.and_also(succeed);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.and_also(succeed);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).and_also(succeed);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).and_also(succeed);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.and_also(succeed);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.and_also(succeed);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).and_also(succeed);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).and_also(succeed);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).and_also(fail);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+}
+
 TEST_CASE("or_else", "[extensions.or_else]") {
   using eptr = std::unique_ptr<int>;
   auto succeed = [](int a) { return tl::expected<int, int>(21 * 2); };

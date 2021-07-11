@@ -485,6 +485,89 @@ TEST_CASE("And also extensions", "[extensions.and_also]") {
   }
 }
 
+#if defined(TL_EXPECTED_BIND_OPERATORS)
+TEST_CASE("Monadic bind operators", "[extensions.bind_operators]") {
+  auto succeed = [](int a) { return tl::expected<int, int>(21 * 2); };
+  auto fail = [](int a) { return tl::expected<int, int>(tl::unexpect, 17); };
+  auto also_succeed = []() { return tl::expected<int, int>(21 * 2 + 1); };
+  auto also_fail = []() { return tl::expected<int, int>(tl::unexpect, 18); };
+
+  SECTION("A succesful op can be chained") {
+      tl::expected<int, int> e = 21;
+      auto ret = e >= succeed > also_succeed;
+      REQUIRE(ret);
+      REQUIRE(*ret == 43);
+  }
+
+  SECTION("A succesful op can be chained, with const") {
+      const tl::expected<int, int> e = 21;
+      auto ret = e >= succeed > also_succeed;
+      REQUIRE(ret);
+      REQUIRE(*ret == 43);
+  }
+
+  SECTION("A succesful op can be chained, with r-value reference") {
+      tl::expected<int, int> e = 21;
+      auto ret = std::move(e) >= succeed > also_succeed;
+      REQUIRE(ret);
+      REQUIRE(*ret == 43);
+  }
+
+  SECTION("A succesful op can be chained, with const r-value reference") {
+      const tl::expected<int, int> e = 21;
+      auto ret = std::move(e) >= succeed > also_succeed;
+      REQUIRE(ret);
+      REQUIRE(*ret == 43);
+  }
+
+  SECTION("A failed op short circuits") {
+    tl::expected<int, int> e = 21;
+    auto ret = e >= fail >= succeed;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+
+    ret = e >= succeed > also_fail;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 18);
+  }
+
+  SECTION("A failed op short circuits, with const") {
+    const tl::expected<int, int> e = 21;
+    auto ret = e >= fail >= succeed;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+
+    ret = e >= succeed > also_fail;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 18);
+  }
+
+  SECTION("A failed op short circuits, with r-value reference") {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e) >= fail >= succeed;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+
+    e = 21;
+    ret = e >= succeed > also_fail;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 18);
+  }
+
+  SECTION("A failed op short circuits, with const r-value reference") {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e) >= fail >= succeed;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 17);
+
+    const tl::expected<int, int> e2 = 21;
+    ret = std::move(e2) >= succeed > also_fail;
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 18);
+  }
+}
+#endif
+
 TEST_CASE("or_else", "[extensions.or_else]") {
   using eptr = std::unique_ptr<int>;
   auto succeed = [](int a) { return tl::expected<int, int>(21 * 2); };

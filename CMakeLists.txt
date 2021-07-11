@@ -16,6 +16,11 @@ if (NOT DEFINED CMAKE_CXX_STANDARD)
 endif()
 
 option(EXPECTED_BUILD_PACKAGE "Build package files as well" ON)
+option(EXPECTED_BIND_OPERATORS "Add haskell-style monadic bind operators" OFF)
+
+if(${EXPECTED_BIND_OPERATORS})
+  add_compile_definitions(TL_EXPECTED_BIND_OPERATORS)
+endif()
 
 cmake_dependent_option(EXPECTED_BUILD_TESTS
   "Enable tl::expected tests" ON

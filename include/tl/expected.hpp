@@ -1216,11 +1216,11 @@ class expected : private detail::expected_move_assign_base<T, E>,
                  private detail::expected_delete_assign_base<T, E>,
                  private detail::expected_default_ctor_base<T, E> {
   static_assert(!std::is_reference<T>::value, "T must not be a reference");
-  static_assert(!std::is_same<T, std::remove_cv<in_place_t>>::value,
+  static_assert(!std::is_same<T, std::remove_cv<in_place_t>::type>::value,
                 "T must not be in_place_t");
-  static_assert(!std::is_same<T, std::remove_cv<unexpect_t>>::value,
+  static_assert(!std::is_same<T, std::remove_cv<unexpect_t>::type>::value,
                 "T must not be unexpect_t");
-  static_assert(!std::is_same<T, std::remove_cv<unexpected<E>>>::value,
+  static_assert(!std::is_same<T, typename std::remove_cv<unexpected<E>>::type>::value,
                 "T must not be unexpected<E>");
   static_assert(!std::is_reference<E>::value, "E must not be a reference");
 

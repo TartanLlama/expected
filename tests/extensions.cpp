@@ -373,8 +373,7 @@ TEST_CASE("or_else", "[extensions.or_else]") {
   auto succeed = [](int a) { (void)a; return tl::expected<int, int>(21 * 2); };
   auto succeedptr = [](eptr e) { (void)e; return tl::expected<int,eptr>(21*2);};
   auto fail =    [](int a) { (void)a; return tl::expected<int,int>(tl::unexpect, 17);};
-  auto efail =   [](eptr e) { *e = 17;return tl::expected<int,eptr>(tl::unexpect, std::move(e));};
-  auto failptr = [](eptr e) { return tl::expected<int,eptr>(tl::unexpect, std::move(e));};
+  auto failptr = [](eptr e) { *e = 17;return tl::expected<int,eptr>(tl::unexpect, std::move(e));};
   auto failvoid = [](int) {};
   auto failvoidptr = [](const eptr&) { /* don't consume */};
   auto consumeptr = [](eptr) {};
@@ -439,7 +438,7 @@ TEST_CASE("or_else", "[extensions.or_else]") {
 
   {
     tl::expected<int, eptr> e = 21;
-    auto ret = std::move(e).or_else(efail);
+    auto ret = std::move(e).or_else(failptr);
     REQUIRE(ret);
     REQUIRE(ret == 21);
   }

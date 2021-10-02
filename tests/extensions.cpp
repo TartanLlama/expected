@@ -3,6 +3,7 @@
 
 #define TOKENPASTE(x, y) x##y
 #define TOKENPASTE2(x, y) TOKENPASTE(x, y)
+#undef STATIC_REQUIRE
 #define STATIC_REQUIRE(e)                                                      \
   constexpr bool TOKENPASTE2(rqure, __LINE__) = e;                             \
   (void)TOKENPASTE2(rqure, __LINE__);                                          \

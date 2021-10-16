@@ -150,7 +150,7 @@ TEST_CASE("Constructors", "[constructors]") {
 #	if !defined(TL_EXPECTED_GCC49)
 		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
 		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
-		REQUIRE(std::is_nothrow_move_constructible<decltype(e)>::value);
+		REQUIRE(!std::is_nothrow_move_constructible<decltype(e)>::value);
 		REQUIRE(std::is_nothrow_move_assignable<decltype(e)>::value);
 #	endif
 	}
@@ -246,7 +246,7 @@ TEST_CASE("Constructors", "[constructors]") {
 #	if !defined(TL_EXPECTED_GCC49)
 		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
 		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
-		REQUIRE(std::is_nothrow_move_constructible<decltype(e)>::value);
+		REQUIRE(!std::is_nothrow_move_constructible<decltype(e)>::value);
 		REQUIRE(std::is_nothrow_move_assignable<decltype(e)>::value);
 #	endif
 	}

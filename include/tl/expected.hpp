@@ -951,7 +951,7 @@ struct expected_move_base<T, E, false> : expected_copy_base<T, E> {
   expected_move_base(const expected_move_base &rhs) = default;
 
   expected_move_base(expected_move_base &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value)
+      is_void_or<T, std::is_nothrow_move_constructible<T>>::value)
       : expected_copy_base<T, E>(no_init) {
     if (rhs.has_value()) {
       this->construct_with(std::move(rhs));

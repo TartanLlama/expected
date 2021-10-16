@@ -139,4 +139,38 @@ TEST_CASE("Constructors", "[constructors]") {
         REQUIRE(!e);
         REQUIRE(e.error() == 42);
     }
+
+	{
+		tl::expected<void, int> e;
+		REQUIRE(std::is_default_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_constructible<decltype(e)>::value);
+		REQUIRE(std::is_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
+		REQUIRE(std::is_move_assignable<decltype(e)>::value);
+		REQUIRE(TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
+		REQUIRE(TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
+#	if !defined(TL_EXPECTED_GCC49)
+		REQUIRE(std::is_trivially_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_trivially_move_assignable<decltype(e)>::value);
+		REQUIRE(std::is_nothrow_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_nothrow_move_assignable<decltype(e)>::value);
+#	endif
+	}
+
+	{
+		tl::expected<void, std::string> e;
+		REQUIRE(std::is_default_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_constructible<decltype(e)>::value);
+		REQUIRE(std::is_move_constructible<decltype(e)>::value);
+		REQUIRE(std::is_copy_assignable<decltype(e)>::value);
+		REQUIRE(std::is_move_assignable<decltype(e)>::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_CONSTRUCTIBLE(decltype(e))::value);
+		REQUIRE(!TL_EXPECTED_IS_TRIVIALLY_COPY_ASSIGNABLE(decltype(e))::value);
+#	if !defined(TL_EXPECTED_GCC49)
+		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
+		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
+		REQUIRE(!std::is_nothrow_move_constructible<decltype(e)>::value);
+		REQUIRE(!std::is_nothrow_move_assignable<decltype(e)>::value);
+#	endif
+	}
 }

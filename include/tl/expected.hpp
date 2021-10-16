@@ -1030,7 +1030,9 @@ struct expected_move_assign_base<T, E, false>
   expected_move_assign_base &
   operator=(expected_move_assign_base &&rhs) noexcept(
       is_void_or<T, conjunction<std::is_nothrow_move_constructible<T>,
-                                std::is_nothrow_move_assignable<T>>>::value) {
+                                std::is_nothrow_move_assignable<T>>>::value
+          &&std::is_nothrow_move_constructible<E>::value
+              &&std::is_nothrow_move_assignable<E>::value) {
     this->assign(std::move(rhs));
     return *this;
   }

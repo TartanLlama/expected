@@ -1223,8 +1223,9 @@ class expected : private detail::expected_move_assign_base<T, E>,
                 "T must not be in_place_t");
   static_assert(!std::is_same<T, std::remove_cv<unexpect_t>::type>::value,
                 "T must not be unexpect_t");
-  static_assert(!std::is_same<T, typename std::remove_cv<unexpected<E>>::type>::value,
-                "T must not be unexpected<E>");
+  static_assert(
+      !std::is_same<T, typename std::remove_cv<unexpected<E>>::type>::value,
+      "T must not be unexpected<E>");
   static_assert(!std::is_reference<E>::value, "E must not be a reference");
 
   T *valptr() { return std::addressof(this->m_val); }

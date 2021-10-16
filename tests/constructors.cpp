@@ -170,7 +170,7 @@ TEST_CASE("Constructors", "[constructors]") {
 		REQUIRE(!std::is_trivially_move_constructible<decltype(e)>::value);
 		REQUIRE(!std::is_trivially_move_assignable<decltype(e)>::value);
 		REQUIRE(std::is_nothrow_move_constructible<decltype(e)>::value);
-		REQUIRE(!std::is_nothrow_move_assignable<decltype(e)>::value);
+		REQUIRE(std::is_nothrow_move_assignable<decltype(e)>::value);
 #	endif
 	}
 }

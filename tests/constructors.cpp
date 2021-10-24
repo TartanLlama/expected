@@ -19,7 +19,7 @@ struct canthrow_move {
     canthrow_move & operator=(const canthrow_move &) = default;
 
     canthrow_move(canthrow_move &&) noexcept(false) {}
-    canthrow_move & operator=(canthrow_move &&) noexcept(false) { return *this; }
+    canthrow_move & operator=(canthrow_move &&) = default;
 };
 
 TEST_CASE("Constructors", "[constructors]") {

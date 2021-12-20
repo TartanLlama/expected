@@ -61,6 +61,10 @@ The interface is the same as `std::expected` as proposed in [p0323r3](http://www
 
 Tested on:
 
+- OpenBSD
+  * clang 13.0.0
+  * clang 11.1.0
+  * g++ 8.4.0
 - Linux
   * clang 6.0.1
   * clang 5.0.2

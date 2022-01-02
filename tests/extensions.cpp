@@ -251,6 +251,77 @@ TEST_CASE("Map error extensions", "[extensions.map_error]") {
 
 }
 
+template <class Exp, class F>
+constexpr auto hasAndThen_impl(int, Exp&& e, F&& f)
+  -> decltype(std::forward<Exp>(e).and_then(std::forward<F>(f)), true) {
+  return true;
+}
+
+template <class Exp, class F>
+constexpr bool hasAndThen_impl(long, Exp&&, F&&) { return false; }
+
+template <class Exp, class F>
+constexpr bool hasAndThen(Exp&& e, F&& f) {
+  return hasAndThen_impl(42, std::forward<Exp>(e), std::forward<F>(f));
+}
+
+TEST_CASE("and_then is SFINAE-friendly", "[extensions.and_then.sfinae]") {
+  auto succeed = [](int) { return tl::expected<int, int>(21 * 2); };
+
+  {
+    tl::expected<int, int> e = 21;
+    STATIC_REQUIRE(hasAndThen(e, succeed));
+    STATIC_REQUIRE(hasAndThen(std::move(e), succeed));
+    STATIC_REQUIRE(hasAndThen(e, std::move(succeed)));
+    STATIC_REQUIRE(hasAndThen(std::move(e), std::move(succeed)));
+  }
+  {
+    const tl::expected<int, int> ce = 21;
+    STATIC_REQUIRE(hasAndThen(ce, succeed));
+    STATIC_REQUIRE(hasAndThen(std::move(ce), succeed));
+    STATIC_REQUIRE(hasAndThen(ce, std::move(succeed)));
+    STATIC_REQUIRE(hasAndThen(std::move(ce), std::move(succeed)));
+  }
+  {
+    tl::expected<int, int> e = 21;
+    STATIC_REQUIRE(!hasAndThen(e, 42));
+
+    auto wrongParamType = [](char *) { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(!hasAndThen(e, wrongParamType));
+
+    auto wrongParamType2 = []() { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(!hasAndThen(e, wrongParamType2));
+
+    auto wrongReturnType = [](int) { return 21; };
+    STATIC_REQUIRE(!hasAndThen(e, wrongReturnType));
+
+    auto wrongReturnType2 = [](int) { return tl::expected<char*, char*>(); };
+    STATIC_REQUIRE(!hasAndThen(e, wrongReturnType2));
+
+    auto voidReturnType = [](int) {};
+    STATIC_REQUIRE(!hasAndThen(e, voidReturnType));
+
+    auto voidReturnWrongParam = [](char *) {};
+    STATIC_REQUIRE(!hasAndThen(e, voidReturnWrongParam));
+  }
+  {
+    tl::expected<int, int> e = 21;
+    const tl::expected<int, int> ce = 21;
+
+    auto lvalueParam = [](int&) { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(hasAndThen(e, lvalueParam));
+    STATIC_REQUIRE(!hasAndThen(std::move(e), lvalueParam));
+    STATIC_REQUIRE(!hasAndThen(ce, lvalueParam));
+    STATIC_REQUIRE(!hasAndThen(std::move(ce), lvalueParam));
+
+    auto rvalueParam = [](int&&) { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(!hasAndThen(e, rvalueParam));
+    STATIC_REQUIRE(hasAndThen(std::move(e), rvalueParam));
+    STATIC_REQUIRE(!hasAndThen(ce, rvalueParam));
+    STATIC_REQUIRE(!hasAndThen(std::move(ce), rvalueParam));
+  }
+}
+
 TEST_CASE("And then extensions", "[extensions.and_then]") {
   auto succeed = [](int a) { return tl::expected<int, int>(21 * 2); };
   auto fail = [](int a) { return tl::expected<int, int>(tl::unexpect, 17); };

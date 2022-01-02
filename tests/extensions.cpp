@@ -7,6 +7,86 @@
   constexpr bool TOKENPASTE2(rqure, __LINE__) = e;                             \
   REQUIRE(e);
 
+template <class Exp, class F>
+constexpr auto hasMap_impl(int, Exp&& e, F&& f)
+  -> decltype(std::forward<Exp>(e).map(std::forward<F>(f)), true) {
+  return true;
+}
+
+template <class Exp, class F>
+constexpr bool hasMap_impl(long, Exp&&, F&&) { return false; }
+
+template <class Exp, class F>
+constexpr bool hasMap(Exp&& e, F&& f) {
+  return hasMap_impl(42, std::forward<Exp>(e), std::forward<F>(f));
+}
+
+TEST_CASE("map is SFINAE-friendly", "[extensions.map.sfinae]") {
+  auto mul2 = [](int a) { return a * 2; };
+  auto ret_void = [](int a) {};
+
+  {
+    tl::expected<int, int> e = 21;
+    STATIC_REQUIRE(hasMap(e, mul2));
+    STATIC_REQUIRE(hasMap(std::move(e), mul2));
+    STATIC_REQUIRE(hasMap(e, std::move(mul2)));
+    STATIC_REQUIRE(hasMap(std::move(e), std::move(mul2)));
+  }
+  {
+    const tl::expected<int, int> ce = 21;
+    STATIC_REQUIRE(hasMap(ce, mul2));
+    STATIC_REQUIRE(hasMap(std::move(ce), mul2));
+    STATIC_REQUIRE(hasMap(ce, std::move(mul2)));
+    STATIC_REQUIRE(hasMap(std::move(ce), std::move(mul2)));
+  }
+  {
+    tl::expected<void, int> ev;
+    tl::expected<int, int> ei = 21;
+
+    STATIC_REQUIRE(!hasMap(ev, 42));
+    STATIC_REQUIRE(!hasMap(ei, 42));
+
+    STATIC_REQUIRE(!hasMap(ev, mul2));
+    STATIC_REQUIRE(hasMap(ei, mul2));
+
+    auto wrongParamType = [](char *) { return 21; };
+    STATIC_REQUIRE(!hasMap(ev, wrongParamType));
+    STATIC_REQUIRE(!hasMap(ei, wrongParamType));
+
+    auto voidParamType = []() { return 21; };
+    STATIC_REQUIRE(hasMap(ev, voidParamType));
+    STATIC_REQUIRE(!hasMap(ei, voidParamType));
+
+    auto voidReturnVoidParam = []() {};
+    STATIC_REQUIRE(hasMap(ev, voidReturnVoidParam));
+    STATIC_REQUIRE(!hasMap(ei, voidReturnVoidParam));
+
+    auto voidReturnIntParam = [](int) {};
+    STATIC_REQUIRE(!hasMap(ev, voidReturnIntParam));
+    STATIC_REQUIRE(hasMap(ei, voidReturnIntParam));
+
+    auto voidReturnWrongParam = [](char *) {};
+    STATIC_REQUIRE(!hasMap(ev, voidReturnWrongParam));
+    STATIC_REQUIRE(!hasMap(ei, voidReturnWrongParam));
+  }
+  {
+    tl::expected<int, int> e = 21;
+    const tl::expected<int, int> ce = 21;
+
+    auto lvalueParam = [](int&) { return 21; };
+    STATIC_REQUIRE(hasMap(e, lvalueParam));
+    STATIC_REQUIRE(!hasMap(std::move(e), lvalueParam));
+    STATIC_REQUIRE(!hasMap(ce, lvalueParam));
+    STATIC_REQUIRE(!hasMap(std::move(ce), lvalueParam));
+
+    auto rvalueParam = [](int&&) { return 21; };
+    STATIC_REQUIRE(!hasMap(e, rvalueParam));
+    STATIC_REQUIRE(hasMap(std::move(e), rvalueParam));
+    STATIC_REQUIRE(!hasMap(ce, rvalueParam));
+    STATIC_REQUIRE(!hasMap(std::move(ce), rvalueParam));
+  }
+}
+
 TEST_CASE("Map extensions", "[extensions.map]") {
   auto mul2 = [](int a) { return a * 2; };
   auto ret_void = [](int a) {};
@@ -141,6 +221,43 @@ TEST_CASE("Map extensions", "[extensions.map]") {
   }
 }
 
+TEST_CASE("Map on expected<void>", "[extensions.map.void]") {
+  {
+    tl::expected<void, int> a;
+    REQUIRE(a.has_value());
+    bool called = false;
+    tl::expected<void, int> b = a.map([&](){ called = true; });
+    REQUIRE(called);
+    REQUIRE(b.has_value());
+  }
+  {
+    tl::expected<void, int> a = tl::make_unexpected(42);
+    REQUIRE(!a.has_value());
+    bool called = false;
+    tl::expected<void, int> b = a.map([&](){ called = true; });
+    REQUIRE(!called);
+    REQUIRE(!b.has_value());
+    REQUIRE(b.error() == 42);
+  }
+  {
+    tl::expected<void, int> a;
+    REQUIRE(a.has_value());
+    bool called = false;
+    tl::expected<int, int> b = a.map([&](){ called = true; return 3; });
+    REQUIRE(called);
+    REQUIRE(b.value() == 3);
+  }
+  {
+    tl::expected<void, int> a = tl::make_unexpected(42);
+    REQUIRE(!a.has_value());
+    bool called = false;
+    tl::expected<int, int> b = a.map([&](){ called = true; return 3; });
+    REQUIRE(!called);
+    REQUIRE(!b.has_value());
+    REQUIRE(b.error() == 42);
+  }
+}
+
 TEST_CASE("Map error extensions", "[extensions.map_error]") {
   auto mul2 = [](int a) { return a * 2; };
   auto ret_void = [](int a) {};
@@ -249,6 +366,77 @@ TEST_CASE("Map error extensions", "[extensions.map_error]") {
     REQUIRE(!ret);
   }
 
+}
+
+template <class Exp, class F>
+constexpr auto hasAndThen_impl(int, Exp&& e, F&& f)
+  -> decltype(std::forward<Exp>(e).and_then(std::forward<F>(f)), true) {
+  return true;
+}
+
+template <class Exp, class F>
+constexpr bool hasAndThen_impl(long, Exp&&, F&&) { return false; }
+
+template <class Exp, class F>
+constexpr bool hasAndThen(Exp&& e, F&& f) {
+  return hasAndThen_impl(42, std::forward<Exp>(e), std::forward<F>(f));
+}
+
+TEST_CASE("and_then is SFINAE-friendly", "[extensions.and_then.sfinae]") {
+  auto succeed = [](int) { return tl::expected<int, int>(21 * 2); };
+
+  {
+    tl::expected<int, int> e = 21;
+    STATIC_REQUIRE(hasAndThen(e, succeed));
+    STATIC_REQUIRE(hasAndThen(std::move(e), succeed));
+    STATIC_REQUIRE(hasAndThen(e, std::move(succeed)));
+    STATIC_REQUIRE(hasAndThen(std::move(e), std::move(succeed)));
+  }
+  {
+    const tl::expected<int, int> ce = 21;
+    STATIC_REQUIRE(hasAndThen(ce, succeed));
+    STATIC_REQUIRE(hasAndThen(std::move(ce), succeed));
+    STATIC_REQUIRE(hasAndThen(ce, std::move(succeed)));
+    STATIC_REQUIRE(hasAndThen(std::move(ce), std::move(succeed)));
+  }
+  {
+    tl::expected<int, int> e = 21;
+    STATIC_REQUIRE(!hasAndThen(e, 42));
+
+    auto wrongParamType = [](char *) { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(!hasAndThen(e, wrongParamType));
+
+    auto wrongParamType2 = []() { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(!hasAndThen(e, wrongParamType2));
+
+    auto wrongReturnType = [](int) { return 21; };
+    STATIC_REQUIRE(!hasAndThen(e, wrongReturnType));
+
+    auto wrongReturnType2 = [](int) { return tl::expected<char*, char*>(); };
+    STATIC_REQUIRE(!hasAndThen(e, wrongReturnType2));
+
+    auto voidReturnType = [](int) {};
+    STATIC_REQUIRE(!hasAndThen(e, voidReturnType));
+
+    auto voidReturnWrongParam = [](char *) {};
+    STATIC_REQUIRE(!hasAndThen(e, voidReturnWrongParam));
+  }
+  {
+    tl::expected<int, int> e = 21;
+    const tl::expected<int, int> ce = 21;
+
+    auto lvalueParam = [](int&) { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(hasAndThen(e, lvalueParam));
+    STATIC_REQUIRE(!hasAndThen(std::move(e), lvalueParam));
+    STATIC_REQUIRE(!hasAndThen(ce, lvalueParam));
+    STATIC_REQUIRE(!hasAndThen(std::move(ce), lvalueParam));
+
+    auto rvalueParam = [](int&&) { return tl::expected<int, int>(); };
+    STATIC_REQUIRE(!hasAndThen(e, rvalueParam));
+    STATIC_REQUIRE(hasAndThen(std::move(e), rvalueParam));
+    STATIC_REQUIRE(!hasAndThen(ce, rvalueParam));
+    STATIC_REQUIRE(!hasAndThen(std::move(ce), rvalueParam));
+  }
 }
 
 TEST_CASE("And then extensions", "[extensions.and_then]") {

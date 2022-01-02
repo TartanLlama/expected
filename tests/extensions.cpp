@@ -141,6 +141,43 @@ TEST_CASE("Map extensions", "[extensions.map]") {
   }
 }
 
+TEST_CASE("Map on expected<void>", "[extensions.map.void]") {
+  {
+    tl::expected<void, int> a;
+    REQUIRE(a.has_value());
+    bool called = false;
+    tl::expected<void, int> b = a.map([&](){ called = true; });
+    REQUIRE(called);
+    REQUIRE(b.has_value());
+  }
+  {
+    tl::expected<void, int> a = tl::make_unexpected(42);
+    REQUIRE(!a.has_value());
+    bool called = false;
+    tl::expected<void, int> b = a.map([&](){ called = true; });
+    REQUIRE(!called);
+    REQUIRE(!b.has_value());
+    REQUIRE(b.error() == 42);
+  }
+  {
+    tl::expected<void, int> a;
+    REQUIRE(a.has_value());
+    bool called = false;
+    tl::expected<int, int> b = a.map([&](){ called = true; return 3; });
+    REQUIRE(called);
+    REQUIRE(b.value() == 3);
+  }
+  {
+    tl::expected<void, int> a = tl::make_unexpected(42);
+    REQUIRE(!a.has_value());
+    bool called = false;
+    tl::expected<int, int> b = a.map([&](){ called = true; return 3; });
+    REQUIRE(!called);
+    REQUIRE(!b.has_value());
+    REQUIRE(b.error() == 42);
+  }
+}
+
 TEST_CASE("Map error extensions", "[extensions.map_error]") {
   auto mul2 = [](int a) { return a * 2; };
   auto ret_void = [](int a) {};

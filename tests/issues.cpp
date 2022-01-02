@@ -15,7 +15,7 @@ TEST_CASE("Issue 1", "[issues.1]") { getInt1(); }
 
 tl::expected<int, int> operation1() { return 42; }
 
-tl::expected<std::string, int> operation2(int const val) { return "Bananas"; }
+tl::expected<std::string, int> operation2(int) { return "Bananas"; }
 
 TEST_CASE("Issue 17", "[issues.17]") {
   auto const intermediate_result = operation1();
@@ -67,7 +67,7 @@ struct i31{
 };
 TEST_CASE("Issue 31", "[issues.31]") {
     const tl::expected<i31, int> a = i31{42};
-    a->i;
+    (void) a->i;
 
     tl::expected< void, std::string > result;
     tl::expected< void, std::string > result2 = result;
@@ -77,7 +77,7 @@ TEST_CASE("Issue 31", "[issues.31]") {
 TEST_CASE("Issue 33", "[issues.33]") {
     tl::expected<void, int> res {tl::unexpect, 0};
     REQUIRE(!res);    
-    res = res.map_error([](int i) { return 42; });
+    res = res.map_error([](int) { return 42; });
     REQUIRE(res.error() == 42);
 }
 

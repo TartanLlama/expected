@@ -1823,7 +1823,7 @@ private:
     rhs.err().~unexpected_type();
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     try {
-      ::new (rhs.valptr()) T(val());
+      ::new (rhs.valptr()) T(std::move(val()));
       val().~T();
       ::new (errptr()) unexpected_type(std::move(temp));
       std::swap(this->m_has_val, rhs.m_has_val);
@@ -1832,7 +1832,7 @@ private:
       throw;
     }
 #else
-    ::new (rhs.valptr()) T(val());
+    ::new (rhs.valptr()) T(std::move(val()));
     val().~T();
     ::new (errptr()) unexpected_type(std::move(temp));
     std::swap(this->m_has_val, rhs.m_has_val);

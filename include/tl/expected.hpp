@@ -1918,6 +1918,16 @@ public:
     return std::move(val());
   }
 
+  // P0323R11 5.14. Partial specialization of expected for void types
+  template<class U = T,
+           detail::enable_if_t<std::is_void<U>::value> * = nullptr>
+  TL_EXPECTED_11_CONSTEXPR void value() const & {
+  }
+  template<class U = T,
+           detail::enable_if_t<std::is_void<U>::value> * = nullptr>
+  TL_EXPECTED_11_CONSTEXPR void value() && {
+  }
+
   constexpr const E &error() const & { return err().value(); }
   TL_EXPECTED_11_CONSTEXPR E &error() & { return err().value(); }
   constexpr const E &&error() const && { return std::move(err().value()); }

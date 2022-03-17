@@ -147,6 +147,11 @@ private:
   E m_val;
 };
 
+#ifdef __cpp_deduction_guides
+template<class E>
+unexpected(E) -> unexpected<E>;
+#endif
+
 template <class E>
 constexpr bool operator==(const unexpected<E> &lhs, const unexpected<E> &rhs) {
   return lhs.value() == rhs.value();

@@ -1925,6 +1925,14 @@ public:
   }
   template<class U = T,
            detail::enable_if_t<std::is_void<U>::value> * = nullptr>
+  TL_EXPECTED_11_CONSTEXPR void value() & {
+  }
+  template<class U = T,
+           detail::enable_if_t<std::is_void<U>::value> * = nullptr>
+  TL_EXPECTED_11_CONSTEXPR void value() const && {
+  }
+  template<class U = T,
+           detail::enable_if_t<std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR void value() && {
   }
 

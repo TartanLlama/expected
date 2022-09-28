@@ -1,15 +1,17 @@
 #include <catch2/catch.hpp>
 #include <tl/expected.hpp>
 
+// catch also defines this exact name
+#undef STATIC_REQUIRE
 #define TOKENPASTE(x, y) x##y
 #define TOKENPASTE2(x, y) TOKENPASTE(x, y)
 #define STATIC_REQUIRE(e)                                                      \
-  constexpr bool TOKENPASTE2(rqure, __LINE__) = e;                             \
+  [[maybe_unused]] constexpr bool TOKENPASTE2(rqure, __LINE__) = e;                             \
   REQUIRE(e);
 
 TEST_CASE("Map extensions", "[extensions.map]") {
   auto mul2 = [](int a) { return a * 2; };
-  auto ret_void = [](int a) {};
+  auto ret_void = [](int) {};
 
   {
     tl::expected<int, int> e = 21;
@@ -143,7 +145,7 @@ TEST_CASE("Map extensions", "[extensions.map]") {
 
 TEST_CASE("Map error extensions", "[extensions.map_error]") {
   auto mul2 = [](int a) { return a * 2; };
-  auto ret_void = [](int a) {};
+  auto ret_void = [](int) {};
 
   {
     tl::expected<int, int> e = 21;
@@ -252,8 +254,8 @@ TEST_CASE("Map error extensions", "[extensions.map_error]") {
 }
 
 TEST_CASE("And then extensions", "[extensions.and_then]") {
-  auto succeed = [](int a) { return tl::expected<int, int>(21 * 2); };
-  auto fail = [](int a) { return tl::expected<int, int>(tl::unexpect, 17); };
+  auto succeed = [](int) { return tl::expected<int, int>(21 * 2); };
+  auto fail = [](int) { return tl::expected<int, int>(tl::unexpect, 17); };
 
   {
     tl::expected<int, int> e = 21;
@@ -370,11 +372,11 @@ TEST_CASE("And then extensions", "[extensions.and_then]") {
 
 TEST_CASE("or_else", "[extensions.or_else]") {
   using eptr = std::unique_ptr<int>;
-  auto succeed = [](int a) { return tl::expected<int, int>(21 * 2); };
-  auto succeedptr = [](eptr e) { return tl::expected<int,eptr>(21*2);};
-  auto fail =    [](int a) { return tl::expected<int,int>(tl::unexpect, 17);};
+  auto succeed = [](int) { return tl::expected<int, int>(21 * 2); };
+  auto succeedptr = [](eptr) { return tl::expected<int,eptr>(21*2);};
+  auto fail =    [](int) { return tl::expected<int,int>(tl::unexpect, 17);};
   auto efail =   [](eptr e) { *e = 17;return tl::expected<int,eptr>(tl::unexpect, std::move(e));};
-  auto failptr = [](eptr e) { return tl::expected<int,eptr>(tl::unexpect, std::move(e));};
+  [[maybe_unused]] auto failptr = [](eptr e) { return tl::expected<int,eptr>(tl::unexpect, std::move(e));};
   auto failvoid = [](int) {};
   auto failvoidptr = [](const eptr&) { /* don't consume */};
   auto consumeptr = [](eptr) {};
@@ -568,7 +570,7 @@ struct F {
 TEST_CASE("14", "[issue.14]") {
     auto res = tl::expected<S,F>{tl::unexpect, F{}};
 
-    res.map_error([](F f) {
+    res.map_error([](F) {
 
     });
 }

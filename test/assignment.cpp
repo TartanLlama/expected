@@ -69,7 +69,7 @@ TEST_CASE("Assignment deletion", "[assignment.deletion]") {
     except_move(except_move &&) noexcept(false){};
     except_move &operator=(const except_move &) = default;
   };
-  tl::expected<except_move, except_move> e3 = {};
-  tl::expected<except_move, except_move> e4 = {};
+  [[maybe_unused]] tl::expected<except_move, except_move> e3 = {};
+  [[maybe_unused]] tl::expected<except_move, except_move> e4 = {};
   // e3 = e4; should not compile
 }

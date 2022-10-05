@@ -68,7 +68,7 @@ if(EXPECTED_BUILD_TESTS)
   set(CATCH_BUILD_TESTING OFF)
   set(CATCH_INSTALL_DOCS OFF)
   FetchContent_Declare(Catch2 URL
-    https://github.com/catchorg/Catch2/archive/v2.9.2.zip) 
+    https://github.com/catchorg/Catch2/archive/v3.1.0.zip)
   FetchContent_MakeAvailable(Catch2)
 
   file(GLOB test-sources CONFIGURE_DEPENDS tests/*.cpp)
@@ -79,7 +79,7 @@ if(EXPECTED_BUILD_TESTS)
 
   target_link_libraries(${PROJECT_NAME}-tests
     PRIVATE
-      Catch2::Catch2
+      Catch2::Catch2WithMain
       expected)
   add_test(NAME tl::expected::tests COMMAND ${PROJECT_NAME}-tests)
 endif()

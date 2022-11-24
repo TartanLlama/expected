@@ -142,7 +142,7 @@ struct move_tracker {
 
         constexpr move_tracker() = default;
 
-        constexpr move_tracker(move_tracker const &other) noexcept = default;
+        constexpr move_tracker(move_tracker const &other) noexcept {};
         constexpr move_tracker(move_tracker &&orig) noexcept
             : moved(orig.moved + 1) {}
 

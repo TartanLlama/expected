@@ -27,6 +27,9 @@ jobs:
           - cxx: g++-7
             install: sudo apt install g++-7
           - cxx: g++-8
+            std: 11
+            install: sudo apt install g++-8
+          - cxx: g++-8
             std: 14
             install: sudo apt install g++-8
           - cxx: g++-8

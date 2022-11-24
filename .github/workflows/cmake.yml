@@ -82,7 +82,12 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Setup Toolchain
-      run: ${{matrix.install}}
+      run: |
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ xenial main'
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ xenial universe'  
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic main'
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic universe'
+        ${{matrix.install}}
 
     - name: Configure CMake
       env:

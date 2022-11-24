@@ -825,7 +825,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
       if (rhs.m_has_val) {
         get() = std::forward<Rhs>(rhs).get();
       } else {
-		destroy_val();
+        destroy_val();
         construct_error(std::forward<Rhs>(rhs).geterr());
       }
     } else {
@@ -858,7 +858,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
 #endif
 
   TL_EXPECTED_11_CONSTEXPR void destroy_val() {
-	get().~T();
+    get().~T();
   }
 };
 
@@ -913,7 +913,7 @@ struct expected_operations_base<void, E> : expected_storage_base<void, E> {
 #endif
 
   TL_EXPECTED_11_CONSTEXPR void destroy_val() {
-	  //no-op
+    //no-op
   }
 };
 

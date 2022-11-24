@@ -13,19 +13,19 @@ jobs:
     strategy:
       matrix:
         std: [11]
-        cxx: [g++-4.8, g++-4.9, g++-5.5, g++-6.4, g++-7.3, g++-8, g++-9, g++-10, clang++-3.5, clang++-3.6, clang++-3.7, clang++-3.8, clang++-3.9, clang++-4, clang++-5, clang++-6, clang++-7, clang++-8, clang++-9]
+        cxx: [g++-4.8, g++-4.9, g++-5, g++-6, g++-7, g++-8, g++-9, g++-10, clang++-3.5, clang++-3.6, clang++-3.7, clang++-3.8, clang++-3.9, clang++-4, clang++-5, clang++-6, clang++-7, clang++-8, clang++-9]
         
         include:
           - cxx: g++-4.8
             install: sudo apt install g++-4.8
           - cxx: g++-4.9
             install: sudo apt install g++-4.9
-          - cxx: g++-5.5
-            install: sudo apt install g++-5.5
-          - cxx: g++-6.4
-            install: sudo apt install g++-6.4
-          - cxx: g++-7.3
-            install: sudo apt install g++-7.3
+          - cxx: g++-5
+            install: sudo apt install g++-5
+          - cxx: g++-6
+            install: sudo apt install g++-6
+          - cxx: g++-7
+            install: sudo apt install g++-7
           - cxx: g++-8
             std: 14
             install: sudo apt install g++-8

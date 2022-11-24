@@ -140,16 +140,16 @@ TEST_CASE("Issue 61", "[issues.61]") {
 struct move_tracker {
         int moved = 0;
 
-        constexpr move_tracker() = default;
+        move_tracker() = default;
 
-        constexpr move_tracker(move_tracker const &other) noexcept {};
-        constexpr move_tracker(move_tracker &&orig) noexcept
+        move_tracker(move_tracker const &other) noexcept {};
+        move_tracker(move_tracker &&orig) noexcept
             : moved(orig.moved + 1) {}
 
-        constexpr move_tracker &
+        move_tracker &
         operator=(move_tracker const &other) noexcept {};
         
-        constexpr move_tracker &operator=(move_tracker &&orig) noexcept {
+        move_tracker &operator=(move_tracker &&orig) noexcept {
           moved = orig.moved + 1;
           return *this;
         }
@@ -157,7 +157,7 @@ struct move_tracker {
 
 TEST_CASE("Issue 122", "[issues.122]") { 
      tl::expected<move_tracker, int> res;
-     res.emplace(); // why moved?
+     res.emplace();
      REQUIRE(res.value().moved == 0);
 }
 

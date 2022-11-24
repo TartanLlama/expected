@@ -62,27 +62,10 @@ The interface is the same as `std::expected` as proposed in [p0323r3](http://www
 Tested on:
 
 - Linux
-  * clang 6.0.1
-  * clang 5.0.2
-  * clang 4.0.1
-  * clang 3.9
-  * clang 3.8
-  * clang 3.7
-  * clang 3.6
-  * clang 3.5
-  * g++ 8.0.1  
-  * g++ 7.3  
-  * g++ 6.4
-  * g++ 5.5  
-  * g++ 4.9
-  * g++ 4.8
+  * clang++ 3.5, 3.6, 3.7, 3.8, 3.9, 4, 5, 6, 7, 8, 9, 10, 11
+  * g++ 4.8, 4.9, 5.5, 6.4, 7.5, 8, 9, 10 
 - Windows
-  * MSVC 2015
-  * MSVC 2017
-
-### Acknowledgements
-
-Thanks to [Kévin Alexandre Boissonneault](https://github.com/KABoissonneault) and [Björn Fahller](https://github.com/rollbear) for various bug fixes.
+  * MSVC 2015, 2017, 2019, 2022
 
 ----------
 

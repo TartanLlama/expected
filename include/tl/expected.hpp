@@ -825,7 +825,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
       if (rhs.m_has_val) {
         get() = std::forward<Rhs>(rhs).get();
       } else {
-		destroy_val();
+        destroy_val();
         construct_error(std::forward<Rhs>(rhs).geterr());
       }
     } else {
@@ -858,7 +858,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
 #endif
 
   TL_EXPECTED_11_CONSTEXPR void destroy_val() {
-	get().~T();
+    get().~T();
   }
 };
 
@@ -913,7 +913,7 @@ struct expected_operations_base<void, E> : expected_storage_base<void, E> {
 #endif
 
   TL_EXPECTED_11_CONSTEXPR void destroy_val() {
-	  //no-op
+    //no-op
   }
 };
 
@@ -1837,12 +1837,12 @@ private:
 
   void swap_where_only_one_has_value_and_t_is_not_void(
       expected &rhs, move_constructing_t_can_throw,
-      t_is_nothrow_move_constructible) {
+      e_is_nothrow_move_constructible) {
     auto temp = std::move(rhs.err());
     rhs.err().~unexpected_type();
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
     try {
-      ::new (rhs.valptr()) T(val());
+      ::new (rhs.valptr()) T(std::move(val()));
       val().~T();
       ::new (errptr()) unexpected_type(std::move(temp));
       std::swap(this->m_has_val, rhs.m_has_val);
@@ -1851,7 +1851,7 @@ private:
       throw;
     }
 #else
-    ::new (rhs.valptr()) T(val());
+    ::new (rhs.valptr()) T(std::move(val()));
     val().~T();
     ::new (errptr()) unexpected_type(std::move(temp));
     std::swap(this->m_has_val, rhs.m_has_val);

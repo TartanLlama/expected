@@ -1680,19 +1680,20 @@ public:
                                T, Args &&...>::value> * = nullptr>
   void emplace(Args &&... args) {
     if (has_value()) {
-      val() = T(std::forward<Args>(args)...);
+      val().~T();
     } else {
       err().~unexpected<E>();
-      ::new (valptr()) T(std::forward<Args>(args)...);
       this->m_has_val = true;
     }
+    ::new (valptr()) T(std::forward<Args>(args)...);
   }
 
     template <class... Args, detail::enable_if_t<!std::is_nothrow_constructible<
                                T, Args &&...>::value> * = nullptr>
   void emplace(Args &&... args) {
     if (has_value()) {
-      val() = T(std::forward<Args>(args)...);
+      val().~T();
+      ::new (valptr()) T(std::forward<Args>(args)...);
     } else {
       auto tmp = std::move(err());
       err().~unexpected<E>();

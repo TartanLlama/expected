@@ -136,3 +136,27 @@ tl::expected<int, std::unique_ptr<std::string>> func()
 TEST_CASE("Issue 61", "[issues.61]") {
   REQUIRE(func().value() == 1);
 }
+
+struct move_tracker {
+        int moved = 0;
+
+        constexpr move_tracker() = default;
+
+        constexpr move_tracker(move_tracker const &other) noexcept = default;
+        constexpr move_tracker(move_tracker &&orig) noexcept
+            : moved(orig.moved + 1) {}
+
+        constexpr move_tracker &
+        operator=(move_tracker const &other) noexcept = default;
+        
+        constexpr move_tracker &operator=(move_tracker &&orig) noexcept {
+          moved = orig.moved + 1;
+          return *this;
+        }
+};
+
+TEST_CASE("Issue 122", "[issues.122]") { 
+     tl::expected<move_tracker, int> res;
+     res.emplace(); // why moved?
+     REQUIRE(res.value().moved == 0);
+}

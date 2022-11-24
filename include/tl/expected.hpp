@@ -138,6 +138,19 @@ public:
 
   constexpr explicit unexpected(E &&e) : m_val(std::move(e)) {}
 
+  
+   template <class... Args, typename std::enable_if<std::is_constructible<
+                               E, Args &&...>::value>::type * = nullptr>
+  constexpr explicit unexpected(Args &&...args)
+      : m_val(std::forward<Args>(args)...) {}
+  template <
+      class U, class... Args,
+      typename std::enable_if<std::is_constructible<
+          E, std::initializer_list<U> &, Args &&...>::value>::type * = nullptr>
+  constexpr explicit unexpected(std::initializer_list<U> l,
+                                Args &&...args)
+      : m_val(l, std::forward<Args>(args)...) {}
+
   constexpr const E &value() const & { return m_val; }
   TL_EXPECTED_11_CONSTEXPR E &value() & { return m_val; }
   TL_EXPECTED_11_CONSTEXPR E &&value() && { return std::move(m_val); }

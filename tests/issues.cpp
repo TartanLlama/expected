@@ -164,6 +164,23 @@ TEST_CASE("Issue 122", "[issues.122]") {
 #ifdef __cpp_deduction_guides
 TEST_CASE("Issue 89", "[issues.89]") { 
     auto s = tl::unexpected("Some string");
-    REQUIRE(s.value() == "Some string");
+    REQUIRE(s.value() == std::string("Some string"));
 }
 #endif
+
+struct S {
+    int i = 0;
+    int j = 0;
+    S(int i) : i(i) {}
+    S(int i, int j) : i(i), j(j) {}
+};
+
+TEST_CASE("Issue 107", "[issues.107]") {
+    tl::expected<int, S> ex1(tl::unexpect, 2); 
+    tl::expected<int, S> ex2(tl::unexpect, 2, 2);
+
+    REQUIRE(ex1.error().i == 2);
+    REQUIRE(ex1.error().j == 0);
+    REQUIRE(ex2.error().i == 2);
+    REQUIRE(ex2.error().j == 2);
+}

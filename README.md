@@ -2,7 +2,7 @@
 Single header implementation of `std::expected` with functional-style extensions.
 
 [![Documentation Status](https://readthedocs.org/projects/tl-docs/badge/?version=latest)](https://tl.tartanllama.xyz/en/latest/?badge=latest)
-Clang + GCC: [![Linux Build Status](https://travis-ci.org/TartanLlama/expected.png?branch=master)](https://travis-ci.org/TartanLlama/expected)
+Clang + GCC: [![Linux Build Status](https://github.com/TartanLlama/expected/actions/workflows/cmake.yml/badge.svg)](https://github.com/TartanLlama/expected/actions/workflows/cmake.yml)
 MSVC: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/k5x00xa11y3s5wsg?svg=true)](https://ci.appveyor.com/project/TartanLlama/expected)
 
 Available on [Vcpkg](https://github.com/microsoft/vcpkg/tree/master/ports/tl-expected) and [Conan](https://github.com/yipdw/conan-tl-expected).

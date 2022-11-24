@@ -8,16 +8,123 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    
+    strategy:
+      matrix:
+        std: [11, 14]
+        cxx: [g++-4.8, g++-4.9, g++-5, g++-6, g++-7, g++-8, g++-9, g++-10, clang++-3.5, clang++-3.6, clang++-3.7, clang++-3.8, clang++-3.9, clang++-4.0, clang++-5.0, clang++-6.0, clang++-7, clang++-8, clang++-9, clang++-10, clang++-11]
+        
+        exclude:
+          - cxx: g++-4.8
+            std: 14
+          - cxx: g++4.9
+            std: 14
+            
+        include:
+          - cxx: g++-4.8
+            install: sudo apt install g++-4.8
+          - cxx: g++-4.9
+            install: sudo apt install g++-4.9
+          - cxx: g++-5
+            install: sudo apt install g++-5
+          - cxx: g++-6
+            install: sudo apt install g++-6
+          - cxx: g++-7
+            install: sudo apt install g++-7
+          - cxx: g++-8
+            std: 11
+            install: sudo apt install g++-8
+          - cxx: g++-8
+            std: 14
+            install: sudo apt install g++-8
+          - cxx: g++-8
+            std: 17
+            install: sudo apt install g++-8
+          - cxx: g++-9
+            std: 14
+          - cxx: g++-9
+            std: 17
+          - cxx: g++-10
+            std: 14
+          - cxx: g++-10
+            std: 17
+          - cxx: g++-11
+            std: 14
+            install: sudo apt install g++-11
+          - cxx: g++-11
+            std: 17
+            install: sudo apt install g++-11
+          - cxx: g++-11
+            std: 20
+            install: sudo apt install g++-11
+            
+            
+          - cxx: clang++-3.5
+            install: sudo apt install clang-3.5
+          - cxx: clang++-3.6
+            install: sudo apt install clang-3.6
+          - cxx: clang++-3.7
+            install: sudo apt install clang-3.7
+          - cxx: clang++-3.8
+            install: sudo apt install clang-3.8
+          - cxx: clang++-3.9
+            install: sudo apt install clang-3.9
+          - cxx: clang++-4.0
+            install: sudo apt install clang-4.0
+          - cxx: clang++-5.0
+            install: sudo apt install clang-5.0
+          - cxx: clang++-6.0
+            install: sudo apt install clang-6.0
+          - cxx: clang++-7
+            install: sudo apt install clang-7
+          - cxx: clang++-8
+            install: sudo apt install clang-8
+          - cxx: clang++-9
+            install: sudo apt install clang-9
+          - cxx: clang++-10
+            install: sudo apt install clang-10
+          - cxx: clang++-11
+            install: sudo apt install clang-11
+            
+
+          - cxx: clang++-6.0
+            std: 17
+            install: sudo apt install clang-6.0
+          - cxx: clang++-7
+            std: 17
+            install: sudo apt install clang-7
+          - cxx: clang++-8
+            std: 17
+            install: sudo apt install clang-8
+          - cxx: clang++-9
+            std: 17
+            install: sudo apt install clang-9
+          - cxx: clang++-10
+            std: 17
+            install: sudo apt install clang-10
+          - cxx: clang++-11
+            std: 17
+            install: sudo apt install clang-11
 
     steps:
     - uses: actions/checkout@v3
+    
+    - name: Setup Toolchain
+      run: |
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ xenial main'
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ xenial universe'  
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic main'
+        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic universe'
+        ${{matrix.install}}
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build 
+      env:
+        CXX: ${{matrix.cxx}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_CXX_STANDARD=${{matrix.std}}
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build
+      run: cmake --build ${{github.workspace}}/build 
 
     - name: Test
       working-directory: ${{github.workspace}}/build

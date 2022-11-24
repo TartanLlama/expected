@@ -79,7 +79,7 @@ jobs:
           - cxx: clang++-10
             install: sudo apt install clang-10
           - cxx: clang++-11
-            install: sube apt install clang-11
+            install: sudo apt install clang-11
 
     steps:
     - uses: actions/checkout@v3

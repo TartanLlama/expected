@@ -1,6 +1,6 @@
 ///
 // expected - An implementation of std::expected with extensions
-// Written in 2017 by Simon Brand (simonrbrand@gmail.com, @TartanLlama)
+// Written in 2017 by Sy Brand (tartanllama@gmail.com, @TartanLlama)
 //
 // Documentation available at http://tl.tartanllama.xyz/
 //

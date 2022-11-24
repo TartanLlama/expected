@@ -12,9 +12,15 @@ jobs:
     
     strategy:
       matrix:
-        std: [11]
+        std: [11, 14]
         cxx: [g++-4.8, g++-4.9, g++-5, g++-6, g++-7, g++-8, g++-9, g++-10, clang++-3.5, clang++-3.6, clang++-3.7, clang++-3.8, clang++-3.9, clang++-4.0, clang++-5.0, clang++-6.0, clang++-7, clang++-8, clang++-9, clang++-10, clang++-11]
         
+        exclude:
+          - cxx: g++-4.8
+            std: 14
+          - cxx: g++4.9
+            std: 14
+            
         include:
           - cxx: g++-4.8
             install: sudo apt install g++-4.8
@@ -79,6 +85,26 @@ jobs:
           - cxx: clang++-10
             install: sudo apt install clang-10
           - cxx: clang++-11
+            install: sudo apt install clang-11
+            
+
+          - cxx: clang++-6.0
+            std: 17
+            install: sudo apt install clang-6.0
+          - cxx: clang++-7
+            std: 17
+            install: sudo apt install clang-7
+          - cxx: clang++-8
+            std: 17
+            install: sudo apt install clang-8
+          - cxx: clang++-9
+            std: 17
+            install: sudo apt install clang-9
+          - cxx: clang++-10
+            std: 17
+            install: sudo apt install clang-10
+          - cxx: clang++-11
+            std: 17
             install: sudo apt install clang-11
 
     steps:

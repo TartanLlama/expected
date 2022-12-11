@@ -616,9 +616,9 @@ template <class E> struct expected_storage_base<void, E, false, true> {
   //no constexpr for GCC 4/5 bug
   #else
   TL_EXPECTED_MSVC2015_CONSTEXPR
-  #endif 
+  #endif
   expected_storage_base() : m_has_val(true) {}
-     
+
   constexpr expected_storage_base(no_init_t) : m_val(), m_has_val(false) {}
 
   constexpr expected_storage_base(in_place_t) : m_has_val(true) {}
@@ -1499,6 +1499,17 @@ public:
       : impl_base(unexpect, e.value()),
         ctor_base(detail::default_constructor_tag{}) {}
 
+  template <class G = E,
+            detail::enable_if_t<std::is_constructible<E, const G &>::value> * =
+                nullptr,
+            detail::enable_if_t<!std::is_convertible<const G &, E>::value> * =
+                nullptr,
+            detail::enable_if_t<!std::is_same<const G &, E>::value> * =
+                nullptr>
+  explicit constexpr expected(const G &g)
+      : impl_base(unexpect, g),
+        ctor_base(detail::default_constructor_tag{}) {}
+
   template <
       class G = E,
       detail::enable_if_t<std::is_constructible<E, const G &>::value> * =
@@ -1506,6 +1517,16 @@ public:
       detail::enable_if_t<std::is_convertible<const G &, E>::value> * = nullptr>
   constexpr expected(unexpected<G> const &e)
       : impl_base(unexpect, e.value()),
+        ctor_base(detail::default_constructor_tag{}) {}
+
+  template <
+      class G = E,
+      detail::enable_if_t<std::is_constructible<E, const G &>::value> * =
+          nullptr,
+      detail::enable_if_t<std::is_convertible<const G &, E>::value> * = nullptr,
+      detail::enable_if_t<!std::is_same<const G &, E>::value> * = nullptr>
+  constexpr expected(G const &g)
+      : impl_base(unexpect, g),
         ctor_base(detail::default_constructor_tag{}) {}
 
   template <
@@ -1520,10 +1541,30 @@ public:
   template <
       class G = E,
       detail::enable_if_t<std::is_constructible<E, G &&>::value> * = nullptr,
+      detail::enable_if_t<!std::is_convertible<G &&, E>::value> * = nullptr,
+      detail::enable_if_t<!std::is_same<G, E>::value> * = nullptr>
+  explicit constexpr expected(G &&g) noexcept(
+      std::is_nothrow_constructible<E, G &&>::value)
+      : impl_base(unexpect, std::move(g)),
+        ctor_base(detail::default_constructor_tag{}) {}
+
+  template <
+      class G = E,
+      detail::enable_if_t<std::is_constructible<E, G &&>::value> * = nullptr,
       detail::enable_if_t<std::is_convertible<G &&, E>::value> * = nullptr>
   constexpr expected(unexpected<G> &&e) noexcept(
       std::is_nothrow_constructible<E, G &&>::value)
       : impl_base(unexpect, std::move(e.value())),
+        ctor_base(detail::default_constructor_tag{}) {}
+
+  template <
+      class G = E,
+      detail::enable_if_t<std::is_constructible<E, G &&>::value> * = nullptr,
+      detail::enable_if_t<std::is_convertible<G &&, E>::value> * = nullptr,
+      detail::enable_if_t<!std::is_same<G, E>::value> * = nullptr>
+  constexpr expected(G &&g) noexcept(
+      std::is_nothrow_constructible<E, G &&>::value)
+      : impl_base(unexpect, std::move(g)),
         ctor_base(detail::default_constructor_tag{}) {}
 
   template <class... Args,

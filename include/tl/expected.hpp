@@ -511,7 +511,6 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
                                            Args &&...args)
       : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
 
-  ~expected_storage_base() = default;
   union {
     T m_val;
     unexpected<E> m_unexpect;
@@ -618,7 +617,7 @@ template <class E> struct expected_storage_base<void, E, false, true> {
   TL_EXPECTED_MSVC2015_CONSTEXPR
   #endif 
   expected_storage_base() : m_has_val(true) {}
-     
+
   constexpr expected_storage_base(no_init_t) : m_val(), m_has_val(false) {}
 
   constexpr expected_storage_base(in_place_t) : m_has_val(true) {}

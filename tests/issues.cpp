@@ -184,3 +184,11 @@ TEST_CASE("Issue 107", "[issues.107]") {
     REQUIRE(ex2.error().i == 2);
     REQUIRE(ex2.error().j == 2);
 }
+
+TEST_CASE("Issue 129", "[issues.129]") {
+  tl::expected<std::unique_ptr<int>, int> x1 {std::make_unique<int>(4)};
+  tl::expected<std::unique_ptr<int>, int> y1 {std::make_unique<int>(2)};
+  x1 = std::move(y1);
+
+  REQUIRE(**x1 == 2);
+}

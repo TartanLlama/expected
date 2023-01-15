@@ -199,13 +199,14 @@ static constexpr unexpect_t unexpect{};
 
 namespace detail {
 template <typename E>
-[[noreturn]] TL_EXPECTED_11_CONSTEXPR void throw_exception([[maybe_unused]] E &&e) {
+[[noreturn]] TL_EXPECTED_11_CONSTEXPR void throw_exception(E &&e) {
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
   throw std::forward<E>(e);
 #else
 #ifdef _MSC_VER
   __assume(0);
 #else
+  (void)e;
   __builtin_unreachable();
 #endif
 #endif

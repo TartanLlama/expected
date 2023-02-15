@@ -29,6 +29,8 @@
 #if (__cplusplus > 201103L) //can't have assert in constexpr in C++11
 #include <cassert>
 #define TL_ASSERT assert
+#else 
+#define TL_ASSERT
 #endif
 #endif
 

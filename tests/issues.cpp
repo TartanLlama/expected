@@ -2,6 +2,7 @@
 #include <tl/expected.hpp>
 
 #include <string>
+#include <memory>
 
 using std::string;
 

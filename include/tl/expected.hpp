@@ -25,15 +25,6 @@
 #include <type_traits>
 #include <utility>
 
-#if !defined(TL_ASSERT)
-#if (__cplusplus > 201103L) //can't have assert in constexpr in C++11
-#include <cassert>
-#define TL_ASSERT(x) assert(x)
-#else 
-#define TL_ASSERT(x)
-#endif
-#endif
-
 #if defined(__EXCEPTIONS) || defined(_CPPUNWIND)
 #define TL_EXPECTED_EXCEPTIONS_ENABLED
 #endif
@@ -58,6 +49,16 @@
 #if (defined(__GNUC__) && __GNUC__ == 5 && __GNUC_MINOR__ <= 5 &&              \
      !defined(__clang__))
 #define TL_EXPECTED_GCC55
+#endif
+
+#if !defined(TL_ASSERT)
+//can't have assert in constexpr in C++11 and GCC 4.9 has a compiler bug
+#if (__cplusplus > 201103L) && !defined(TL_EXPECTED_GCC49)
+#include <cassert>
+#define TL_ASSERT(x) assert(x)
+#else 
+#define TL_ASSERT(x)
+#endif
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ <= 9 &&              \

@@ -1463,6 +1463,48 @@ public:
     return map_error_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
+#if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
+    !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto transform_error(F &&f) & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+  template <class F> TL_EXPECTED_11_CONSTEXPR auto transform_error(F &&f) && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
+  }
+  template <class F> constexpr auto transform_error(F &&f) const & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+  template <class F> constexpr auto transform_error(F &&f) const && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
+  }
+#else
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(map_error_impl(std::declval<expected &>(),
+                                                   std::declval<F &&>()))
+  transform_error(F &&f) & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+  template <class F>
+  TL_EXPECTED_11_CONSTEXPR decltype(map_error_impl(std::declval<expected &&>(),
+                                                   std::declval<F &&>()))
+  transform_error(F &&f) && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
+  }
+  template <class F>
+  constexpr decltype(map_error_impl(std::declval<const expected &>(),
+                                    std::declval<F &&>()))
+  transform_error(F &&f) const & {
+    return map_error_impl(*this, std::forward<F>(f));
+  }
+
+#ifndef TL_EXPECTED_NO_CONSTRR
+  template <class F>
+  constexpr decltype(map_error_impl(std::declval<const expected &&>(),
+                                    std::declval<F &&>()))
+  transform_error(F &&f) const && {
+    return map_error_impl(std::move(*this), std::forward<F>(f));
+  }
+#endif
 #endif
   template <class F> expected TL_EXPECTED_11_CONSTEXPR or_else(F &&f) & {
     return or_else_impl(*this, std::forward<F>(f));

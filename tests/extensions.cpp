@@ -558,6 +558,251 @@ TEST_CASE("or_else", "[extensions.or_else]") {
   }
 
 }
+
+TEST_CASE("Transform extensions", "[extensions.tronsfarm]") {
+  auto mul2 = [](int a) { return a * 2; };
+  auto ret_void = [](int a) { (void)a; };
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.transform(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.transform(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 21);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.transform(ret_void);
+    REQUIRE(ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.transform(ret_void);
+    REQUIRE(ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform(ret_void);
+    REQUIRE(ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform(ret_void);
+    REQUIRE(ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform(ret_void);
+    REQUIRE(!ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform(ret_void);
+    REQUIRE(!ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform(ret_void);
+    REQUIRE(!ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform(ret_void);
+    REQUIRE(!ret);
+    STATIC_REQUIRE(
+        (std::is_same<decltype(ret), tl::expected<void, int>>::value));
+  }
+
+
+  // mapping functions which return references
+  {
+    tl::expected<int, int> e(42);
+    auto ret = e.transform([](int& i) -> int& { return i; });
+    REQUIRE(ret);
+    REQUIRE(ret == 42);
+  }
+}
+
+TEST_CASE("Transform error extensions", "[extensions.transform_error]") {
+  auto mul2 = [](int a) { return a * 2; };
+  auto ret_void = [](int a) { (void)a; };
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.transform_error(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.transform_error(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_error(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_error(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_error(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_error(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_error(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_error(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.transform_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.transform_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_error(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_error(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_error(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_error(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_error(ret_void);
+    REQUIRE(!ret);
+  }
+
+}
+
 struct S {
     int x;
 };

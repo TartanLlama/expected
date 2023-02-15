@@ -187,8 +187,8 @@ TEST_CASE("Issue 107", "[issues.107]") {
 }
 
 TEST_CASE("Issue 129", "[issues.129]") {
-  tl::expected<std::unique_ptr<int>, int> x1 {std::make_unique<int>(4)};
-  tl::expected<std::unique_ptr<int>, int> y1 {std::make_unique<int>(2)};
+  tl::expected<std::unique_ptr<int>, int> x1 {std::unique_ptr<int>(new int(4))};
+  tl::expected<std::unique_ptr<int>, int> y1 {std::unique_ptr<int>(new int(2))};
   x1 = std::move(y1);
 
   REQUIRE(**x1 == 2);

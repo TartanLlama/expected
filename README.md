@@ -57,6 +57,8 @@ The interface is the same as `std::expected` as proposed in [p0323r3](http://www
 - `or_else`: calls some function if there is no value stored.
   * `exp.or_else([] { throw std::runtime_error{"oh no"}; });`
 
+p0323r3 specifies calling `.error()` on an expected value, or using the `*` or `->` operators on an unexpected value, to be undefined behaviour. In this implementation it causes an assertion failure. The implementation of assertions can be overridden by defining the macro `TL_ASSERT(boolean_condition)` before #including <tl/expected.hpp>; by default, `assert(boolean_condition)` from the `<cassert>` header is used. Note that correct code would not rely on these assertions.
+
 ### Compiler support
 
 Tested on:

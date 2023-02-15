@@ -25,6 +25,11 @@
 #include <type_traits>
 #include <utility>
 
+#if !defined(TL_ASSERT)
+#include <cassert>
+#define TL_ASSERT assert
+#endif
+
 #if defined(__EXCEPTIONS) || defined(_CPPUNWIND)
 #define TL_EXPECTED_EXCEPTIONS_ENABLED
 #endif
@@ -1890,27 +1895,37 @@ public:
     }
   }
 
-  constexpr const T *operator->() const { return valptr(); }
-  TL_EXPECTED_11_CONSTEXPR T *operator->() { return valptr(); }
+  constexpr const T *operator->() const {
+    TL_ASSERT(has_value());
+    return valptr();
+  }
+  TL_EXPECTED_11_CONSTEXPR T *operator->() {
+    TL_ASSERT(has_value());
+    return valptr();
+  }
 
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   constexpr const U &operator*() const & {
+    TL_ASSERT(has_value());
     return val();
   }
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR U &operator*() & {
+    TL_ASSERT(has_value());
     return val();
   }
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   constexpr const U &&operator*() const && {
+    TL_ASSERT(has_value());
     return std::move(val());
   }
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR U &&operator*() && {
+    TL_ASSERT(has_value());
     return std::move(val());
   }
 
@@ -1946,10 +1961,22 @@ public:
     return std::move(val());
   }
 
-  constexpr const E &error() const & { return err().value(); }
-  TL_EXPECTED_11_CONSTEXPR E &error() & { return err().value(); }
-  constexpr const E &&error() const && { return std::move(err().value()); }
-  TL_EXPECTED_11_CONSTEXPR E &&error() && { return std::move(err().value()); }
+  constexpr const E &error() const & {
+    TL_ASSERT(!has_value());
+    return err().value();
+  }
+  TL_EXPECTED_11_CONSTEXPR E &error() & {
+    TL_ASSERT(!has_value());
+    return err().value();
+  }
+  constexpr const E &&error() const && {
+    TL_ASSERT(!has_value());
+    return std::move(err().value());
+  }
+  TL_EXPECTED_11_CONSTEXPR E &&error() && {
+    TL_ASSERT(!has_value());
+    return std::move(err().value());
+  }
 
   template <class U> constexpr T value_or(U &&v) const & {
     static_assert(std::is_copy_constructible<T>::value &&

@@ -1463,6 +1463,7 @@ public:
     return map_error_impl(std::move(*this), std::forward<F>(f));
   }
 #endif
+#endif
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
     !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
   template <class F> TL_EXPECTED_11_CONSTEXPR auto transform_error(F &&f) & {

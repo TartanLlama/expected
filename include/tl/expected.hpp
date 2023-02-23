@@ -2153,7 +2153,6 @@ constexpr auto expected_map_impl(Exp &&exp, F &&f) {
                          : result(unexpect, std::forward<Exp>(exp).error());
 }
 
-#ifndef TL_EXPECTED_STRICT
 template <class Exp, class F,
           detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>(),
@@ -2168,7 +2167,6 @@ auto expected_map_impl(Exp &&exp, F &&f) {
 
   return result(unexpect, std::forward<Exp>(exp).error());
 }
-#endif
 
 template <class Exp, class F,
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
@@ -2180,7 +2178,6 @@ constexpr auto expected_map_impl(Exp &&exp, F &&f) {
                          : result(unexpect, std::forward<Exp>(exp).error());
 }
 
-#ifndef TL_EXPECTED_STRICT
 template <class Exp, class F,
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>())),
@@ -2194,7 +2191,6 @@ auto expected_map_impl(Exp &&exp, F &&f) {
 
   return result(unexpect, std::forward<Exp>(exp).error());
 }
-#endif
 #else
 template <class Exp, class F,
           detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,
@@ -2211,7 +2207,6 @@ constexpr auto expected_map_impl(Exp &&exp, F &&f)
                          : result(unexpect, std::forward<Exp>(exp).error());
 }
 
-#ifndef TL_EXPECTED_STRICT
 template <class Exp, class F,
           detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>(),
@@ -2226,7 +2221,6 @@ auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
 
   return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
 }
-#endif
 
 template <class Exp, class F,
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
@@ -2241,7 +2235,6 @@ constexpr auto expected_map_impl(Exp &&exp, F &&f)
                          : result(unexpect, std::forward<Exp>(exp).error());
 }
 
-#ifndef TL_EXPECTED_STRICT
 template <class Exp, class F,
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>())),
@@ -2255,7 +2248,6 @@ auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
 
   return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
 }
-#endif
 #endif
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \

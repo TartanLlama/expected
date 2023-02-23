@@ -2255,8 +2255,11 @@ auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
 template <class Exp, class F,
           detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              std::declval<Exp>().error())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+                                              std::declval<Exp>().error()))
+#ifndef TL_EXPECTED_STRICT
+          , detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr
+#endif
+         >
 constexpr auto map_error_impl(Exp &&exp, F &&f) {
   using result = expected<exp_t<Exp>, detail::decay_t<Ret>>;
   return exp.has_value()
@@ -2283,8 +2286,11 @@ auto map_error_impl(Exp &&exp, F &&f) {
 template <class Exp, class F,
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              std::declval<Exp>().error())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+                                              std::declval<Exp>().error()))
+#ifndef TL_EXPECTED_STRICT
+          , detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr
+#endif
+         >
 constexpr auto map_error_impl(Exp &&exp, F &&f) {
   using result = expected<exp_t<Exp>, detail::decay_t<Ret>>;
   return exp.has_value()
@@ -2312,8 +2318,11 @@ auto map_error_impl(Exp &&exp, F &&f) {
 template <class Exp, class F,
           detail::enable_if_t<!std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              std::declval<Exp>().error())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+                                              std::declval<Exp>().error()))
+#ifndef TL_EXPECTED_STRICT
+          , detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr
+#endif
+         >
 constexpr auto map_error_impl(Exp &&exp, F &&f)
     -> expected<exp_t<Exp>, detail::decay_t<Ret>> {
   using result = expected<exp_t<Exp>, detail::decay_t<Ret>>;
@@ -2344,8 +2353,11 @@ auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, monostate> {
 template <class Exp, class F,
           detail::enable_if_t<std::is_void<exp_t<Exp>>::value> * = nullptr,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              std::declval<Exp>().error())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+                                              std::declval<Exp>().error()))
+#ifndef TL_EXPECTED_STRICT
+          , detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr
+#endif
+         >
 constexpr auto map_error_impl(Exp &&exp, F &&f)
     -> expected<exp_t<Exp>, detail::decay_t<Ret>> {
   using result = expected<exp_t<Exp>, detail::decay_t<Ret>>;
@@ -2377,8 +2389,11 @@ auto map_error_impl(Exp &&exp, F &&f) -> expected<exp_t<Exp>, monostate> {
 #ifdef TL_EXPECTED_CXX14
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              std::declval<Exp>().error())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+                                              std::declval<Exp>().error()))
+#ifndef TL_EXPECTED_STRICT
+          , detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr
+#endif
+         >
 constexpr auto or_else_impl(Exp &&exp, F &&f) {
   static_assert(detail::is_expected<Ret>::value, "F must return an expected");
   return exp.has_value() ? std::forward<Exp>(exp)
@@ -2400,8 +2415,11 @@ detail::decay_t<Exp> or_else_impl(Exp &&exp, F &&f) {
 #else
 template <class Exp, class F,
           class Ret = decltype(detail::invoke(std::declval<F>(),
-                                              std::declval<Exp>().error())),
-          detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr>
+                                              std::declval<Exp>().error()))
+#ifndef TL_EXPECTED_STRICT
+          , detail::enable_if_t<!std::is_void<Ret>::value> * = nullptr
+#endif
+         >
 auto or_else_impl(Exp &&exp, F &&f) -> Ret {
   static_assert(detail::is_expected<Ret>::value, "F must return an expected");
   return exp.has_value() ? std::forward<Exp>(exp)

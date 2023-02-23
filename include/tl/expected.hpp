@@ -1283,8 +1283,8 @@ class expected : private detail::expected_move_assign_base<T, E>,
   using ctor_base = detail::expected_default_ctor_base<T, E>;
 
 public:
-  using value_type T;
-  using error_type E;
+  using value_type = T;
+  using error_type = E;
   using unexpected_type = unexpected<E>;
   template <class U> using rebind = expected<U, error_type>;
 

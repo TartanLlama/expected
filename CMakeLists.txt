@@ -29,7 +29,7 @@ add_library(expected INTERFACE)
 target_include_directories(expected
   INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 if (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
   add_library(tl::expected ALIAS expected)
@@ -63,13 +63,17 @@ install(FILES
 install(DIRECTORY "include/" TYPE INCLUDE)
 
 if(EXPECTED_BUILD_TESTS)
-  set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-  set(CATCH_INSTALL_HELPERS OFF)
-  set(CATCH_BUILD_TESTING OFF)
-  set(CATCH_INSTALL_DOCS OFF)
-  FetchContent_Declare(Catch2 URL
-    https://github.com/catchorg/Catch2/archive/v2.13.10.zip) 
-  FetchContent_MakeAvailable(Catch2)
+  find_package(Catch2 3 QUIET)
+  if (NOT Catch2_FOUND)
+    message(STATUS "Bundled version of Catch will be downloaded and used.")
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+    set(CATCH_INSTALL_HELPERS OFF)
+    set(CATCH_BUILD_TESTING OFF)
+    set(CATCH_INSTALL_DOCS OFF)
+    FetchContent_Declare(Catch2 URL
+      https://github.com/catchorg/Catch2/archive/v3.3.2.zip)
+    FetchContent_MakeAvailable(Catch2)
+  endif()
 
   file(GLOB test-sources CONFIGURE_DEPENDS tests/*.cpp)
   list(FILTER test-sources EXCLUDE REGEX "tests/test.cpp")
@@ -79,7 +83,7 @@ if(EXPECTED_BUILD_TESTS)
 
   target_link_libraries(${PROJECT_NAME}-tests
     PRIVATE
-      Catch2::Catch2
+      Catch2::Catch2WithMain
       expected)
   add_test(NAME tl::expected::tests COMMAND ${PROJECT_NAME}-tests)
 endif()

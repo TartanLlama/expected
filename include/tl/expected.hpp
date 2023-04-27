@@ -150,6 +150,18 @@ public:
 
   template <class... Args, typename std::enable_if<std::is_constructible<
                                E, Args &&...>::value>::type * = nullptr>
+  constexpr explicit unexpected(in_place_t, Args &&...args)
+      : m_val(std::forward<Args>(args)...) {}
+  template <
+      class U, class... Args,
+      typename std::enable_if<std::is_constructible<
+          E, std::initializer_list<U> &, Args &&...>::value>::type * = nullptr>
+  constexpr explicit unexpected(in_place_t, std::initializer_list<U> l, Args &&...args)
+      : m_val(l, std::forward<Args>(args)...) {}
+
+#ifndef TL_EXPECTED_STRICT
+  template <class... Args, typename std::enable_if<std::is_constructible<
+                               E, Args &&...>::value>::type * = nullptr>
   constexpr explicit unexpected(Args &&...args)
       : m_val(std::forward<Args>(args)...) {}
   template <
@@ -158,6 +170,7 @@ public:
           E, std::initializer_list<U> &, Args &&...>::value>::type * = nullptr>
   constexpr explicit unexpected(std::initializer_list<U> l, Args &&...args)
       : m_val(l, std::forward<Args>(args)...) {}
+#endif
 
   constexpr const E &value() const & { return m_val; }
   TL_EXPECTED_11_CONSTEXPR E &value() & { return m_val; }
@@ -465,7 +478,7 @@ struct expected_storage_base {
             detail::enable_if_t<std::is_constructible<E, Args &&...>::value> * =
                 nullptr>
   constexpr explicit expected_storage_base(unexpect_t, Args &&...args)
-      : m_unexpect(std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, std::forward<Args>(args)...), m_has_val(false) {}
 
   template <class U, class... Args,
             detail::enable_if_t<std::is_constructible<
@@ -473,7 +486,7 @@ struct expected_storage_base {
   constexpr explicit expected_storage_base(unexpect_t,
                                            std::initializer_list<U> il,
                                            Args &&...args)
-      : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() {
     if (m_has_val) {
@@ -512,7 +525,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
             detail::enable_if_t<std::is_constructible<E, Args &&...>::value> * =
                 nullptr>
   constexpr explicit expected_storage_base(unexpect_t, Args &&...args)
-      : m_unexpect(std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, std::forward<Args>(args)...), m_has_val(false) {}
 
   template <class U, class... Args,
             detail::enable_if_t<std::is_constructible<
@@ -520,7 +533,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, true> {
   constexpr explicit expected_storage_base(unexpect_t,
                                            std::initializer_list<U> il,
                                            Args &&...args)
-      : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() = default;
   union {
@@ -553,7 +566,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
             detail::enable_if_t<std::is_constructible<E, Args &&...>::value> * =
                 nullptr>
   constexpr explicit expected_storage_base(unexpect_t, Args &&...args)
-      : m_unexpect(std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, std::forward<Args>(args)...), m_has_val(false) {}
 
   template <class U, class... Args,
             detail::enable_if_t<std::is_constructible<
@@ -561,7 +574,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
   constexpr explicit expected_storage_base(unexpect_t,
                                            std::initializer_list<U> il,
                                            Args &&...args)
-      : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() {
     if (!m_has_val) {
@@ -598,7 +611,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
             detail::enable_if_t<std::is_constructible<E, Args &&...>::value> * =
                 nullptr>
   constexpr explicit expected_storage_base(unexpect_t, Args &&...args)
-      : m_unexpect(std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, std::forward<Args>(args)...), m_has_val(false) {}
 
   template <class U, class... Args,
             detail::enable_if_t<std::is_constructible<
@@ -606,7 +619,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   constexpr explicit expected_storage_base(unexpect_t,
                                            std::initializer_list<U> il,
                                            Args &&...args)
-      : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() {
     if (m_has_val) {
@@ -638,7 +651,7 @@ template <class E> struct expected_storage_base<void, E, false, true> {
             detail::enable_if_t<std::is_constructible<E, Args &&...>::value> * =
                 nullptr>
   constexpr explicit expected_storage_base(unexpect_t, Args &&...args)
-      : m_unexpect(std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, std::forward<Args>(args)...), m_has_val(false) {}
 
   template <class U, class... Args,
             detail::enable_if_t<std::is_constructible<
@@ -646,7 +659,7 @@ template <class E> struct expected_storage_base<void, E, false, true> {
   constexpr explicit expected_storage_base(unexpect_t,
                                            std::initializer_list<U> il,
                                            Args &&...args)
-      : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() = default;
   struct dummy {};
@@ -668,7 +681,7 @@ template <class E> struct expected_storage_base<void, E, false, false> {
             detail::enable_if_t<std::is_constructible<E, Args &&...>::value> * =
                 nullptr>
   constexpr explicit expected_storage_base(unexpect_t, Args &&...args)
-      : m_unexpect(std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, std::forward<Args>(args)...), m_has_val(false) {}
 
   template <class U, class... Args,
             detail::enable_if_t<std::is_constructible<
@@ -676,7 +689,7 @@ template <class E> struct expected_storage_base<void, E, false, false> {
   constexpr explicit expected_storage_base(unexpect_t,
                                            std::initializer_list<U> il,
                                            Args &&...args)
-      : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
+      : m_unexpect(in_place, il, std::forward<Args>(args)...), m_has_val(false) {}
 
   ~expected_storage_base() {
     if (!m_has_val) {

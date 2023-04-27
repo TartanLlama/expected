@@ -109,7 +109,7 @@ struct is_trivially_copy_constructible<std::vector<T, A>> : std::false_type {};
   std::is_trivially_destructible<T>
 #endif
 
-#if __cplusplus > 201103L
+#if __cplusplus > 201103L || (defined(_MSC_VER) && _MSC_VER >= 1910)
 #define TL_EXPECTED_CXX14
 #endif
 

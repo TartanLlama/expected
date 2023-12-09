@@ -108,7 +108,7 @@ jobs:
             install: sudo apt install clang-11
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup Toolchain
       run: |

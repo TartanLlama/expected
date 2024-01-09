@@ -398,8 +398,8 @@ template <class T, class E, class U>
 using expected_enable_forward_value = detail::enable_if_t<
     std::is_constructible<T, U &&>::value &&
     !std::is_same<detail::decay_t<U>, in_place_t>::value &&
-    !std::is_same<expected<T, E>, detail::decay_t<U>>::value &&
-    !std::is_same<unexpected<E>, detail::decay_t<U>>::value>;
+    !std::is_base_of<expected<T, E>, detail::decay_t<U>>::value &&
+    !std::is_base_of<unexpected<E>, detail::decay_t<U>>::value>;
 
 template <class T, class E, class U, class G, class UR, class GR>
 using expected_enable_from_other = detail::enable_if_t<

@@ -82,6 +82,7 @@ if(EXPECTED_BUILD_TESTS)
       Catch2::Catch2
       expected)
   add_test(NAME tl::expected::tests COMMAND ${PROJECT_NAME}-tests)
+  install(TARGETS ${PROJECT_NAME}-tests)
 endif()
 
 if (NOT EXPECTED_BUILD_PACKAGE)

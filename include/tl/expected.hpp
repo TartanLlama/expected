@@ -53,7 +53,7 @@
 
 #if !defined(TL_ASSERT)
 //can't have assert in constexpr in C++11 and GCC 4.9 has a compiler bug
-#if (__cplusplus > 201103L) && !defined(TL_EXPECTED_GCC49)
+#if (TL_CPLUSPLUS > 201103L) && !defined(TL_EXPECTED_GCC49)
 #include <cassert>
 #define TL_ASSERT(x) assert(x)
 #else 
@@ -109,7 +109,13 @@ struct is_trivially_copy_constructible<std::vector<T, A>> : std::false_type {};
   std::is_trivially_destructible<T>
 #endif
 
-#if __cplusplus > 201103L || (defined(_MSC_VER) && _MSC_VER >= 1910)
+#ifdef _MSVC_LANG
+#define TL_CPLUSPLUS _MSVC_LANG
+#else
+#define TL_CPLUSPLUS __cplusplus
+#endif
+
+#if TL_CPLUSPLUS > 201103L
 #define TL_EXPECTED_CXX14
 #endif
 
@@ -119,7 +125,7 @@ struct is_trivially_copy_constructible<std::vector<T, A>> : std::false_type {};
 #define TL_EXPECTED_GCC49_CONSTEXPR constexpr
 #endif
 
-#if (__cplusplus == 201103L || defined(TL_EXPECTED_MSVC2015) ||                \
+#if (TL_CPLUSPLUS == 201103L || defined(TL_EXPECTED_MSVC2015) ||                \
      defined(TL_EXPECTED_GCC49))
 #define TL_EXPECTED_11_CONSTEXPR
 #else

@@ -193,3 +193,12 @@ TEST_CASE("Issue 129", "[issues.129]") {
 
   REQUIRE(**x1 == 2);
 }
+
+TEST_CASE("PR 156", "[pr.156]") {
+  tl::expected<void, int> a (tl::unexpect, 12);
+  tl::expected<void, int> b (tl::unexpect, 12);
+  tl::expected<void, int> c (tl::unexpect, 42);
+  REQUIRE(!(a != b));
+  REQUIRE(a != c);
+  REQUIRE(b != c);
+}

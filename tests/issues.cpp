@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <system_error>
 
 using std::string;
 

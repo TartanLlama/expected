@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     
     strategy:
       matrix:
@@ -112,10 +112,6 @@ jobs:
     
     - name: Setup Toolchain
       run: |
-        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ xenial main'
-        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ xenial universe'  
-        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic main'
-        sudo apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic universe'
         ${{matrix.install}}
 
     - name: Configure CMake

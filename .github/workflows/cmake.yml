@@ -112,6 +112,7 @@ jobs:
     
     - name: Setup Toolchain
       run: |
+        sudo apt update
         ${{matrix.install}}
 
     - name: Configure CMake

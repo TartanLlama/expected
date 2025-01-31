@@ -1739,7 +1739,9 @@ public:
     if (has_value()) {
       val() = std::forward<U>(v);
     } else {
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       auto tmp = std::move(err());
+#endif
       err().~unexpected<E>();
 
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
@@ -1808,7 +1810,9 @@ public:
       val().~T();
       ::new (valptr()) T(std::forward<Args>(args)...);
     } else {
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       auto tmp = std::move(err());
+#endif
       err().~unexpected<E>();
 
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED

@@ -144,12 +144,12 @@ struct move_tracker {
 
         move_tracker() = default;
 
-        move_tracker(move_tracker const &other) noexcept {};
+        move_tracker(move_tracker const &other) noexcept;
         move_tracker(move_tracker &&orig) noexcept
             : moved(orig.moved + 1) {}
 
         move_tracker &
-        operator=(move_tracker const &other) noexcept {};
+        operator=(move_tracker const &other) noexcept;
         
         move_tracker &operator=(move_tracker &&orig) noexcept {
           moved = orig.moved + 1;

@@ -814,7 +814,7 @@ struct F {
 TEST_CASE("14", "[issue.14]") {
     auto res = tl::expected<S,F>{tl::unexpect, F{}};
 
-    res.map_error([](F f) {
+    (void)res.map_error([](F f) {
         (void)f;
     });
 }
@@ -822,7 +822,7 @@ TEST_CASE("14", "[issue.14]") {
 TEST_CASE("32", "[issue.32]") {
     int i = 0;
     tl::expected<void, int> a;
-    a.map([&i]{i = 42;});
+    (void)a.map([&i]{i = 42;});
     REQUIRE(i == 42);
 
     auto x = a.map([]{return 42;});

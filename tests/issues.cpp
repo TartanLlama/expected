@@ -13,7 +13,7 @@ tl::expected<int, string> getInt2(int val) { return val; }
 
 tl::expected<int, string> getInt1() { return getInt2(5).and_then(getInt3); }
 
-TEST_CASE("Issue 1", "[issues.1]") { getInt1(); }
+TEST_CASE("Issue 1", "[issues.1]") { (void)getInt1(); }
 
 tl::expected<int, int> operation1() { return 42; }
 
@@ -22,7 +22,7 @@ tl::expected<std::string, int> operation2(int const val) { (void)val; return "Ba
 TEST_CASE("Issue 17", "[issues.17]") {
   auto const intermediate_result = operation1();
 
-  intermediate_result.and_then(operation2);
+  (void)intermediate_result.and_then(operation2);
 }
 
 struct a {};
@@ -61,7 +61,7 @@ tl::expected<int, std::string> error() {
 std::string maperror(std::string s) { return s + "maperror "; }
 
 TEST_CASE("Issue 30", "[issues.30]") {
-  error().map_error(maperror);
+  (void)error().map_error(maperror);
 }
 
 struct i31{
@@ -91,7 +91,7 @@ void errorhandling(std::string){}
 TEST_CASE("Issue 34", "[issues.34]") {
   tl::expected <int, std::string> result = voidWork ()
       .and_then (work2);
-  result.map_error ([&] (std::string result) {errorhandling (result);});
+  (void)result.map_error ([&] (std::string result) {errorhandling (result);});
 }
 
 struct non_copyable {
@@ -101,7 +101,7 @@ struct non_copyable {
 };
 
 TEST_CASE("Issue 42", "[issues.42]") {
-	tl::expected<non_copyable,int>{}.map([](non_copyable) {});
+ 	(void)tl::expected<non_copyable,int>{}.map([](non_copyable) {});
 }
 
 TEST_CASE("Issue 43", "[issues.43]") {

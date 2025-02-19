@@ -131,4 +131,24 @@ TEST_CASE("Constructors", "[constructors]") {
         REQUIRE(!e);
         REQUIRE(e.error() == 42);
     }
+
+    {
+        constexpr tl::unexpected<char> u('s');
+        tl::expected<int, int> e(u);
+        REQUIRE(e.error() == 's');
+    }
+
+    {
+        struct value {
+            constexpr explicit value(char v) : val(v) {}
+            char val;
+        };
+
+        constexpr tl::unexpected<char> u('s');
+        tl::expected<int, value> e1(u);
+        REQUIRE(e1.error().val == 's');
+
+        tl::expected<int, value> e2(tl::unexpected<char>('s'));
+        REQUIRE(e2.error().val == 's');
+    }
 }

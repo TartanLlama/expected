@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <vector>
+#include <array>
 #include <string>
 
 struct takes_init_and_variadic {
@@ -11,6 +12,27 @@ struct takes_init_and_variadic {
     template <class... Args>
     takes_init_and_variadic(std::initializer_list<int> l, Args &&... args)
         : v(l), t(std::forward<Args>(args)...) {}
+};
+
+struct trivial_type {
+    int x;
+    int y;
+    trivial_type(int _x, int _y) : x{_x}, y{_y} {}
+    trivial_type(std::initializer_list<int> list) {
+      auto it = list.begin();
+      x = *it;
+      ++it;
+      y = *it;
+    }
+};
+
+struct takes_init_and_variadic_trivial {
+    trivial_type p;
+    std::tuple<int, int> t;
+    template <class... Args>
+    takes_init_and_variadic_trivial(std::initializer_list<int> l,
+                                         Args &&...args)
+      : p(l), t(std::forward<Args>(args)...) {}
 };
 
 TEST_CASE("Constructors", "[constructors]") {
@@ -39,6 +61,12 @@ TEST_CASE("Constructors", "[constructors]") {
     }
 
     {
+        tl::expected<int, int> e(tl::in_place);
+        REQUIRE(e);
+        REQUIRE(e == 0);
+    }
+
+    {
         tl::expected<std::vector<int>,int> e (tl::in_place, {0,1});
         REQUIRE(e);
         REQUIRE((*e)[0] == 0);
@@ -53,12 +81,99 @@ TEST_CASE("Constructors", "[constructors]") {
     }
 
     {
+        tl::expected<int, std::tuple<int, int>> e(tl::unexpect, 0, 1);
+        REQUIRE(!e);
+        REQUIRE(std::get<0>(e.error()) == 0);
+        REQUIRE(std::get<1>(e.error()) == 1);
+    }
+
+    {
+        tl::expected<void, std::tuple<int, int>> e(tl::unexpect, 0, 1);
+        REQUIRE(!e);
+        REQUIRE(std::get<0>(e.error()) == 0);
+        REQUIRE(std::get<1>(e.error()) == 1);
+    }
+    {
+        tl::expected<void, std::vector<int>> e(tl::unexpect, 2, 1);
+        REQUIRE(!e);
+        REQUIRE(e.error()[0] == 1);
+        REQUIRE(e.error()[1] == 1);
+    }
+    {
+        tl::expected<std::vector<int>, std::vector<int>> e(tl::unexpect, 2, 1);
+        REQUIRE(!e);
+        REQUIRE(e.error()[0] == 1);
+        REQUIRE(e.error()[1] == 1);
+    }
+    {
+        tl::expected<std::vector<int>, takes_init_and_variadic> e(tl::unexpect,
+                                                                  {0, 1}, 2, 3);
+        REQUIRE(!e);
+        REQUIRE(e.error().v[0] == 0);
+        REQUIRE(e.error().v[1] == 1);
+        REQUIRE(std::get<0>(e.error().t) == 2);
+        REQUIRE(std::get<1>(e.error().t) == 3);
+    }
+    {
         tl::expected<takes_init_and_variadic,int> e (tl::in_place, {0,1}, 2, 3);
         REQUIRE(e);
         REQUIRE(e->v[0] == 0);
         REQUIRE(e->v[1] == 1);
         REQUIRE(std::get<0>(e->t) == 2);
         REQUIRE(std::get<1>(e->t) == 3);
+    }
+    {
+        tl::expected<int, takes_init_and_variadic> e(tl::unexpect, {0, 1}, 2, 3);
+        REQUIRE(!e);
+        REQUIRE(e.error().v[0] == 0);
+        REQUIRE(e.error().v[1] == 1);
+        REQUIRE(std::get<0>(e.error().t) == 2);
+        REQUIRE(std::get<1>(e.error().t) == 3);
+    }
+    {
+        tl::expected<int, takes_init_and_variadic_trivial> e(tl::unexpect, {0, 1}, 2, 3);
+        REQUIRE(!e);
+        REQUIRE(e.error().p.x == 0);
+        REQUIRE(e.error().p.y == 1);
+        REQUIRE(std::get<0>(e.error().t) == 2);
+        REQUIRE(std::get<1>(e.error().t) == 3);
+    }
+    {
+        tl::expected<void, takes_init_and_variadic_trivial> e(tl::unexpect,
+                                                                   {0, 1}, 2, 3);
+        REQUIRE(!e);
+        REQUIRE(e.error().p.x == 0);
+        REQUIRE(e.error().p.y == 1);
+        REQUIRE(std::get<0>(e.error().t) == 2);
+        REQUIRE(std::get<1>(e.error().t) == 3);
+    }
+    {
+        tl::expected<int, std::vector<int>> e(tl::unexpect, 2, 1);
+        REQUIRE(!e);
+        REQUIRE(e.error()[0] == 1);
+        REQUIRE(e.error()[1] == 1);
+    }
+    {
+        tl::expected<std::vector<int>, trivial_type> e(tl::unexpect, 1, 2);
+        REQUIRE(!e);
+        REQUIRE(e.error().x == 1);
+        REQUIRE(e.error().y == 2);
+    }
+    {
+        tl::expected<std::vector<int>, takes_init_and_variadic_trivial> e(tl::unexpect, {1, 2}, 3, 4);
+        REQUIRE(!e);
+        REQUIRE(e.error().p.x == 1);
+        REQUIRE(e.error().p.y == 2);
+        REQUIRE(std::get<0>(e.error().t) == 3);
+        REQUIRE(std::get<1>(e.error().t) == 4);
+    }
+    {
+        tl::expected<void, takes_init_and_variadic> e(tl::unexpect, {0, 1}, 2, 3);
+        REQUIRE(!e);
+        REQUIRE(e.error().v[0] == 0);
+        REQUIRE(e.error().v[1] == 1);
+        REQUIRE(std::get<0>(e.error().t) == 2);
+        REQUIRE(std::get<1>(e.error().t) == 3);
     }
 
 	{
@@ -131,4 +246,32 @@ TEST_CASE("Constructors", "[constructors]") {
         REQUIRE(!e);
         REQUIRE(e.error() == 42);
     }
+
+    {
+        constexpr tl::unexpected<char> u('s');
+        tl::expected<int, int> e(u);
+        REQUIRE(e.error() == 's');
+    }
+
+    {
+        struct value {
+            constexpr explicit value(char v) : val(v) {}
+            char val;
+        };
+
+        constexpr tl::unexpected<char> u('s');
+        tl::expected<int, value> e1(u);
+        REQUIRE(e1.error().val == 's');
+
+        tl::expected<int, value> e2(tl::unexpected<char>('s'));
+        REQUIRE(e2.error().val == 's');
+    }
+}
+
+TEST_CASE("Unexpected constructors", "[constructors]") {
+    REQUIRE(tl::unexpected<int>(1).error() == 1);
+    REQUIRE(tl::unexpected<int>(tl::in_place).error() == 0);
+    REQUIRE(tl::unexpected<int>(tl::in_place, 1).error() == 1);
+    REQUIRE(tl::unexpected<std::vector<int>>(tl::in_place, {1, 2, 3}).error() ==
+            std::vector<int>{1, 2, 3});
 }

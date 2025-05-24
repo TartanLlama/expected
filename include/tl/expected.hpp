@@ -1,6 +1,6 @@
 ///
 // expected - An implementation of std::expected with extensions
-// Written in 2017 by Sy Brand (tartanllama@gmail.com, @TartanLlama)
+// Copyright (C) 2017 Sy Brand (tartanllama@gmail.com, @TartanLlama)
 //
 // Documentation available at http://tl.tartanllama.xyz/
 //
@@ -11,6 +11,8 @@
 // You should have received a copy of the CC0 Public Domain Dedication
 // along with this software. If not, see
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
+//
+// SPDX-License-Identifier: CC0-1.0
 ///
 
 #ifndef TL_EXPECTED_HPP

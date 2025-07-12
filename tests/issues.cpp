@@ -166,7 +166,7 @@ TEST_CASE("Issue 122", "[issues.122]") {
 #ifdef __cpp_deduction_guides
 TEST_CASE("Issue 89", "[issues.89]") { 
     auto s = tl::unexpected("Some string");
-    REQUIRE(s.value() == std::string("Some string"));
+    REQUIRE(s.error() == std::string("Some string"));
 }
 #endif
 

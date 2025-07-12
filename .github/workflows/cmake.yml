@@ -61,15 +61,35 @@ jobs:
             
             
           - cxx: clang++-3.5
-            install: sudo apt install clang-3.5
+            install:
+              wget https://releases.llvm.org/3.5.0/clang+llvm-3.5.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+              tar xf clang+llvm-3.5.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+              export PATH=`pwd`/clang+llvm-3.5.0-x86_64-linux-gnu/bin:$PATH
+              ln -s `pwd`/clang+llvm-3.5.0-x86_64-linux-gnu/bin/clang++ clang+llvm-3.5.0-x86_64-linux-gnu/bin/clang++-3.5
           - cxx: clang++-3.6
-            install: sudo apt install clang-3.6
+            install: 
+              wget https://releases.llvm.org/3.6.0/clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+              tar xf clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+              export PATH=`pwd`/clang+llvm-3.6.0-x86_64-linux-gnu/bin:$PATH
+              ln -s `pwd`/clang+llvm-3.6.0-x86_64-linux-gnu/bin/clang++ clang+llvm-3.6.0-x86_64-linux-gnu/bin/clang++-3.6
           - cxx: clang++-3.7
-            install: sudo apt install clang-3.7
+            install: 
+              wget https://releases.llvm.org/3.7.0/clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+              tar xf clang+llvm-3.7.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+              export PATH=`pwd`/clang+llvm-3.7.0-x86_64-linux-gnu/bin:$PATH
+              ln -s `pwd`/clang+llvm-3.7.0-x86_64-linux-gnu/bin/clang++ clang+llvm-3.7.0-x86_64-linux-gnu/bin/clang++-3.7
           - cxx: clang++-3.8
-            install: sudo apt install clang-3.8
+            install: 
+              wget https://releases.llvm.org/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+              tar xf clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+              export PATH=`pwd`/clang+llvm-3.8.0-x86_64-linux-gnu/bin:$PATH
+              ln -s `pwd`/clang+llvm-3.8.0-x86_64-linux-gnu/bin/clang++ clang+llvm-3.8.0-x86_64-linux-gnu/bin/clang++-3.8
           - cxx: clang++-3.9
-            install: sudo apt install clang-3.9
+            install: 
+              wget https://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+              tar xf clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+              export PATH=`pwd`/clang+llvm-3.9.0-x86_64-linux-gnu/bin:$PATH
+              ln -s `pwd`/clang+llvm-3.9.0-x86_64-linux-gnu/bin/clang++ clang+llvm-3.9.0-x86_64-linux-gnu/bin/clang++-3.9
           - cxx: clang++-4.0
             install: sudo apt install clang-4.0
           - cxx: clang++-5.0
@@ -113,8 +133,10 @@ jobs:
     - name: Setup Toolchain
       run: |
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-        
         sudo apt update
+        wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+        sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
+        sudo apt install clang
         ${{matrix.install}}
 
     - name: Configure CMake

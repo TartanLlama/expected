@@ -137,7 +137,7 @@ jobs:
     - name: Configure CMake
       env:
         CXX: ${{matrix.cxx}}
-      run: 
+      run: |
         mkdir -p ${{github.workspace}}/build
         cmake -B ${{github.workspace}}/build -DCMAKE_CXX_STANDARD=${{matrix.std}}
 

@@ -34,3 +34,15 @@ TEST_CASE("Observers", "[observers]") {
   REQUIRE(o4->been_moved);
   REQUIRE(!o5.been_moved);
 }
+
+#ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
+TEST_CASE("Observers invalid access", "[observers]") {
+  tl::expected<int, char> err(tl::make_unexpected('!'));
+
+  REQUIRE_THROWS_AS(err.value(), tl::bad_expected_access<char>);
+  REQUIRE_THROWS_AS(std::as_const(err).value(), tl::bad_expected_access<char>);
+  REQUIRE_THROWS_AS(std::move(std::as_const(err)).value(),
+                    tl::bad_expected_access<char>);
+  REQUIRE_THROWS_AS(std::move(err).value(), tl::bad_expected_access<char>);
+}
+#endif

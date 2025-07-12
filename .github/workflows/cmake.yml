@@ -124,6 +124,7 @@ jobs:
         apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic universe'
         add-apt-repository -y ppa:ubuntu-toolchain-r/test
         apt update
+        apt install -y build-essential cmake
         ${{matrix.install}}
 
     - name: Configure CMake

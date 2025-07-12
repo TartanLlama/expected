@@ -50,6 +50,9 @@ jobs:
             std: 17
             install: apt install -y g++-9
           - cxx: g++-10
+            std: 11
+            install: apt install -y g++-10
+          - cxx: g++-10
             std: 14
             install: apt install -y g++-10
           - cxx: g++-10

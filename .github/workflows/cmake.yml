@@ -114,6 +114,8 @@ jobs:
     
     - name: Setup Toolchain
       run: |
+        apt update
+        apt install software-properties-common
         apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ focal main'
         apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ focal universe'  
         apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ xenial main'
@@ -121,6 +123,7 @@ jobs:
         apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic main'
         apt-add-repository 'deb http://azure.archive.ubuntu.com/ubuntu/ bionic universe'
         add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        apt update
         ${{matrix.install}}
 
     - name: Configure CMake

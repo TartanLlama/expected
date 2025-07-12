@@ -9,7 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    container: ubuntu:20.04
+    container: 
+      image: ubuntu:20.04
     
     strategy:
       matrix:

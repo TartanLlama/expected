@@ -138,7 +138,7 @@ jobs:
       env:
         CXX: ${{matrix.cxx}}
       run: 
-        mkdir ${{github.workspace}}/build
+        mkdir -p ${{github.workspace}}/build
         cmake -B ${{github.workspace}}/build -DCMAKE_CXX_STANDARD=${{matrix.std}}
 
     - name: Build

@@ -132,8 +132,14 @@ struct is_trivially_copy_constructible<std::vector<T, A>> : std::false_type {};
 #define TL_EXPECTED_11_CONSTEXPR constexpr
 #endif
 
+#if TL_CPLUSPLUS >= 201703L 
+#define TL_EXPECTED_NODISCARD [[nodiscard]]
+#else
+#define TL_EXPECTED_NODISCARD
+#endif
+
 namespace tl {
-template <class T, class E> class [[nodiscard]] expected;
+template <class T, class E> class TL_EXPECTED_NODISCARD expected;
 
 #ifndef TL_MONOSTATE_INPLACE_MUTEX
 #define TL_MONOSTATE_INPLACE_MUTEX
@@ -1276,7 +1282,7 @@ private:
 /// has been destroyed. The initialization state of the contained object is
 /// tracked by the expected object.
 template <class T, class E>
-class [[nodiscard]] expected :
+class TL_EXPECTED_NODISCARD expected :
                  private detail::expected_move_assign_base<T, E>,
                  private detail::expected_delete_ctor_base<T, E>,
                  private detail::expected_delete_assign_base<T, E>,

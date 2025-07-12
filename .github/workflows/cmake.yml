@@ -95,7 +95,6 @@ jobs:
             install: apt install -y clang-10
           - cxx: clang++-11
             install: apt install -y clang-11
-            
 
           - cxx: clang++-6.0
             std: 17

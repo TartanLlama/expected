@@ -51,6 +51,12 @@
 #define TL_EXPECTED_GCC55
 #endif
 
+#ifdef _MSVC_LANG
+#define TL_CPLUSPLUS _MSVC_LANG
+#else
+#define TL_CPLUSPLUS __cplusplus
+#endif
+
 #if !defined(TL_ASSERT)
 //can't have assert in constexpr in C++11 and GCC 4.9 has a compiler bug
 #if (TL_CPLUSPLUS > 201103L) && !defined(TL_EXPECTED_GCC49)
@@ -107,12 +113,6 @@ struct is_trivially_copy_constructible<std::vector<T, A>> : std::false_type {};
   std::is_trivially_copy_assignable<T>
 #define TL_EXPECTED_IS_TRIVIALLY_DESTRUCTIBLE(T)                               \
   std::is_trivially_destructible<T>
-#endif
-
-#ifdef _MSVC_LANG
-#define TL_CPLUSPLUS _MSVC_LANG
-#else
-#define TL_CPLUSPLUS __cplusplus
 #endif
 
 #if TL_CPLUSPLUS > 201103L

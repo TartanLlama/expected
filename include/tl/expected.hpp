@@ -1322,9 +1322,10 @@ class TL_EXPECTED_NODISCARD expected :
   using ctor_base = detail::expected_default_ctor_base<T, E>;
 
 public:
-  typedef T value_type;
-  typedef E error_type;
-  typedef unexpected<E> unexpected_type;
+  using value_type = T;
+  using error_type = E;
+  using unexpected_type = unexpected<E>;
+  template <class U> using rebind = expected<U, error_type>;
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) &&               \
     !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)

@@ -803,6 +803,116 @@ TEST_CASE("Transform error extensions", "[extensions.transform_error]") {
 
 }
 
+TEST_CASE("transform_or", "[extensions.transform_or]") {
+  auto mul2 = [](int a) { return a * 2; };
+  auto ret_void = [](int a) { (void)a; };
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.transform_or(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.transform_or(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_or(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_or(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_or(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_or(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_or(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_or(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = e.transform_or(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = e.transform_or(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_or(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    const tl::expected<int, int> e = 21;
+    auto ret = std::move(e).transform_or(ret_void);
+    REQUIRE(ret);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_or(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = e.transform_or(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_or(ret_void);
+    REQUIRE(!ret);
+  }
+
+  {
+    const tl::expected<int, int> e(tl::unexpect, 21);
+    auto ret = std::move(e).transform_or(ret_void);
+    REQUIRE(!ret);
+  }
+
+}
+
 struct S {
     int x;
 };

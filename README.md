@@ -63,6 +63,10 @@ p0323r3 specifies calling `.error()` on an expected value, or using the `*` or `
 
 Tested on:
 
+- OpenBSD
+  * clang 13.0.0
+  * clang 11.1.0
+  * g++ 8.4.0
 - Linux
   * clang++ 3.5, 3.6, 3.7, 3.8, 3.9, 4, 5, 6, 7, 8, 9, 10, 11
   * g++ 4.8, 4.9, 5.5, 6.4, 7.5, 8, 9, 10 

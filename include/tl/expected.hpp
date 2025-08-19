@@ -176,6 +176,25 @@ public:
   TL_EXPECTED_11_CONSTEXPR E &&value() && { return std::move(m_val); }
   constexpr const E &&value() const && { return std::move(m_val); }
 
+  friend constexpr bool operator==(const unexpected &lhs, const unexpected &rhs) {
+    return lhs.value() == rhs.value();
+  }
+  friend constexpr bool operator!=(const unexpected &lhs, const unexpected &rhs) {
+    return lhs.value() != rhs.value();
+  }
+  friend constexpr bool operator<(const unexpected &lhs, const unexpected &rhs) {
+    return lhs.value() < rhs.value();
+  }
+  friend constexpr bool operator<=(const unexpected &lhs, const unexpected &rhs) {
+    return lhs.value() <= rhs.value();
+  }
+  friend constexpr bool operator>(const unexpected &lhs, const unexpected &rhs) {
+    return lhs.value() > rhs.value();
+  }
+  friend constexpr bool operator>=(const unexpected &lhs, const unexpected &rhs) {
+    return lhs.value() >= rhs.value();
+  }
+
 private:
   E m_val;
 };
@@ -183,31 +202,6 @@ private:
 #ifdef __cpp_deduction_guides
 template <class E> unexpected(E) -> unexpected<E>;
 #endif
-
-template <class E>
-constexpr bool operator==(const unexpected<E> &lhs, const unexpected<E> &rhs) {
-  return lhs.value() == rhs.value();
-}
-template <class E>
-constexpr bool operator!=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
-  return lhs.value() != rhs.value();
-}
-template <class E>
-constexpr bool operator<(const unexpected<E> &lhs, const unexpected<E> &rhs) {
-  return lhs.value() < rhs.value();
-}
-template <class E>
-constexpr bool operator<=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
-  return lhs.value() <= rhs.value();
-}
-template <class E>
-constexpr bool operator>(const unexpected<E> &lhs, const unexpected<E> &rhs) {
-  return lhs.value() > rhs.value();
-}
-template <class E>
-constexpr bool operator>=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
-  return lhs.value() >= rhs.value();
-}
 
 template <class E>
 unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
@@ -2078,6 +2072,19 @@ public:
                   "T must be move-constructible and convertible to from U&&");
     return bool(*this) ? std::move(**this) : static_cast<T>(std::forward<U>(v));
   }
+
+  friend constexpr bool operator==(const expected &x, const unexpected<E> &e) {
+    return x.has_value() ? false : x.error() == e.value();
+  }
+  friend constexpr bool operator==(const unexpected<E> &e, const expected &x) {
+    return x.has_value() ? false : x.error() == e.value();
+  }
+  friend constexpr bool operator!=(const expected &x, const unexpected<E> &e) {
+    return x.has_value() ? true : x.error() != e.value();
+  }
+  friend constexpr bool operator!=(const unexpected<E> &e, const expected &x) {
+    return x.has_value() ? true : x.error() != e.value();
+  }
 };
 
 namespace detail {
@@ -2449,23 +2456,6 @@ constexpr bool operator!=(const expected<T, E> &x, const U &v) {
 template <class T, class E, class U>
 constexpr bool operator!=(const U &v, const expected<T, E> &x) {
   return x.has_value() ? *x != v : true;
-}
-
-template <class T, class E>
-constexpr bool operator==(const expected<T, E> &x, const unexpected<E> &e) {
-  return x.has_value() ? false : x.error() == e.value();
-}
-template <class T, class E>
-constexpr bool operator==(const unexpected<E> &e, const expected<T, E> &x) {
-  return x.has_value() ? false : x.error() == e.value();
-}
-template <class T, class E>
-constexpr bool operator!=(const expected<T, E> &x, const unexpected<E> &e) {
-  return x.has_value() ? true : x.error() != e.value();
-}
-template <class T, class E>
-constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
-  return x.has_value() ? true : x.error() != e.value();
 }
 
 template <class T, class E,

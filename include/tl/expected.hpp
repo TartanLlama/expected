@@ -1018,7 +1018,8 @@ struct expected_move_base<T, E, false> : expected_copy_base<T, E> {
   expected_move_base(const expected_move_base &rhs) = default;
 
   expected_move_base(expected_move_base &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value)
+      is_void_or<T, std::is_nothrow_move_constructible<T>>::value
+          &&std::is_nothrow_move_constructible<E>::value)
       : expected_copy_base<T, E>(no_init) {
     if (rhs.has_value()) {
       this->construct_with(std::move(rhs));
@@ -1099,8 +1100,10 @@ struct expected_move_assign_base<T, E, false>
 
   expected_move_assign_base &
   operator=(expected_move_assign_base &&rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value
-          &&std::is_nothrow_move_assignable<T>::value) {
+      is_void_or<T, conjunction<std::is_nothrow_move_constructible<T>,
+                                std::is_nothrow_move_assignable<T>>>::value
+          &&std::is_nothrow_move_constructible<E>::value
+              &&std::is_nothrow_move_assignable<E>::value) {
     this->assign(std::move(rhs));
     return *this;
   }

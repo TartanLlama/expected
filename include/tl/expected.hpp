@@ -221,7 +221,7 @@ static constexpr unexpect_t unexpect{};
 
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
 #define TL_EXPECTED_THROW_EXCEPTION(e) throw((e));
-#elif defined(_MSC_VER)
+#else
 #define TL_EXPECTED_THROW_EXCEPTION(e) std::terminate();
 #endif
 

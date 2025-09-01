@@ -17,7 +17,7 @@
 #define TL_EXPECTED_HPP
 
 #define TL_EXPECTED_VERSION_MAJOR 1
-#define TL_EXPECTED_VERSION_MINOR 2
+#define TL_EXPECTED_VERSION_MINOR 3
 #define TL_EXPECTED_VERSION_PATCH 0
 
 #include <exception>
@@ -219,20 +219,11 @@ struct unexpect_t {
 };
 static constexpr unexpect_t unexpect{};
 
-namespace detail {
-template <typename E>
-[[noreturn]] TL_EXPECTED_11_CONSTEXPR void throw_exception(E &&e) {
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
-  throw std::forward<E>(e);
-#else
-  (void)e;
-#ifdef _MSC_VER
-  __assume(0);
-#else
-  __builtin_unreachable();
+#define TL_EXPECTED_THROW_EXCEPTION(e) throw((e));
+#elif defined(_MSC_VER)
+#define TL_EXPECTED_THROW_EXCEPTION(e) std::terminate();
 #endif
-#endif
-}
 
 #ifndef TL_TRAITS_MUTEX
 #define TL_TRAITS_MUTEX
@@ -2024,28 +2015,28 @@ public:
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR const U &value() const & {
     if (!has_value())
-      detail::throw_exception(bad_expected_access<E>(err().value()));
+      TL_EXPECTED_THROW_EXCEPTION(bad_expected_access<E>(err().value()));
     return val();
   }
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR U &value() & {
     if (!has_value())
-      detail::throw_exception(bad_expected_access<E>(err().value()));
+      TL_EXPECTED_THROW_EXCEPTION(bad_expected_access<E>(err().value()));
     return val();
   }
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR const U &&value() const && {
     if (!has_value())
-      detail::throw_exception(bad_expected_access<E>(std::move(err()).value()));
+      TL_EXPECTED_THROW_EXCEPTION(bad_expected_access<E>(std::move(err()).value()));
     return std::move(val());
   }
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   TL_EXPECTED_11_CONSTEXPR U &&value() && {
     if (!has_value())
-      detail::throw_exception(bad_expected_access<E>(std::move(err()).value()));
+      TL_EXPECTED_THROW_EXCEPTION(bad_expected_access<E>(std::move(err()).value()));
     return std::move(val());
   }
 

@@ -225,6 +225,7 @@ static constexpr unexpect_t unexpect{};
 #define TL_EXPECTED_THROW_EXCEPTION(e) std::terminate();
 #endif
 
+namespace detail {
 #ifndef TL_TRAITS_MUTEX
 #define TL_TRAITS_MUTEX
 // C++14-style aliases for brevity

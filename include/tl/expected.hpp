@@ -210,7 +210,7 @@ constexpr bool operator>=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
 }
 
 template <class E>
-unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
+TL_EXPECTED_NODISCARD unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
   return unexpected<typename std::decay<E>::type>(std::forward<E>(e));
 }
 

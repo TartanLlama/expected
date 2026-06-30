@@ -132,7 +132,13 @@ struct is_trivially_copy_constructible<std::vector<T, A>> : std::false_type {};
 #define TL_EXPECTED_11_CONSTEXPR constexpr
 #endif
 
-#if TL_CPLUSPLUS >= 201703L 
+#if TL_CPLUSPLUS >= 202002L
+#define TL_EXPECTED_20_CONSTEXPR constexpr
+#else
+#define TL_EXPECTED_20_CONSTEXPR
+#endif
+
+#if TL_CPLUSPLUS >= 201703L
 #define TL_EXPECTED_NODISCARD [[nodiscard]]
 #else
 #define TL_EXPECTED_NODISCARD
@@ -479,7 +485,7 @@ struct expected_storage_base {
                                            Args &&...args)
       : m_unexpect(il, std::forward<Args>(args)...), m_has_val(false) {}
 
-  ~expected_storage_base() {
+  TL_EXPECTED_20_CONSTEXPR ~expected_storage_base() {
     if (m_has_val) {
       m_val.~T();
     } else {
@@ -575,7 +581,7 @@ template <class T, class E> struct expected_storage_base<T, E, true, false> {
   expected_storage_base(expected_storage_base &&) = default;
   expected_storage_base &operator=(const expected_storage_base &) = default;
   expected_storage_base &operator=(expected_storage_base &&) = default;
-  ~expected_storage_base() {
+  TL_EXPECTED_20_CONSTEXPR ~expected_storage_base() {
     if (!m_has_val) {
       m_unexpect.~unexpected<E>();
     }
@@ -624,7 +630,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
   expected_storage_base(expected_storage_base &&) = default;
   expected_storage_base &operator=(const expected_storage_base &) = default;
   expected_storage_base &operator=(expected_storage_base &&) = default;
-  ~expected_storage_base() {
+  TL_EXPECTED_20_CONSTEXPR ~expected_storage_base() {
     if (m_has_val) {
       m_val.~T();
     }
@@ -702,7 +708,7 @@ template <class E> struct expected_storage_base<void, E, false, false> {
   expected_storage_base(expected_storage_base &&) = default;
   expected_storage_base &operator=(const expected_storage_base &) = default;
   expected_storage_base &operator=(expected_storage_base &&) = default;
-  ~expected_storage_base() {
+  TL_EXPECTED_20_CONSTEXPR ~expected_storage_base() {
     if (!m_has_val) {
       m_unexpect.~unexpected<E>();
     }

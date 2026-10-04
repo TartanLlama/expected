@@ -1954,15 +1954,18 @@ private:
 
 public:
   template <class OT = T, class OE = E>
-  detail::enable_if_t<detail::is_swappable<OT>::value &&
-                      detail::is_swappable<OE>::value &&
-                      (std::is_nothrow_move_constructible<OT>::value ||
-                       std::is_nothrow_move_constructible<OE>::value)>
+  detail::enable_if_t<
+      ((std::is_void<OT>::value && std::is_move_constructible<OE>::value) ||
+       (detail::is_swappable<OT>::value &&
+        (std::is_nothrow_move_constructible<OT>::value ||
+         std::is_nothrow_move_constructible<OE>::value))) &&
+      detail::is_swappable<OE>::value>
   swap(expected &rhs) noexcept(
-      std::is_nothrow_move_constructible<T>::value
-          &&detail::is_nothrow_swappable<T>::value
-              &&std::is_nothrow_move_constructible<E>::value
-                  &&detail::is_nothrow_swappable<E>::value) {
+      (std::is_void<T>::value ||
+       (std::is_nothrow_move_constructible<T>::value &&
+        detail::is_nothrow_swappable<T>::value)) &&
+      std::is_nothrow_move_constructible<E>::value &&
+      detail::is_nothrow_swappable<E>::value) {
     if (has_value() && rhs.has_value()) {
       swap_where_both_have_value(rhs, typename std::is_void<T>::type{});
     } else if (!has_value() && rhs.has_value()) {
@@ -1971,7 +1974,7 @@ public:
       swap_where_only_one_has_value(rhs, typename std::is_void<T>::type{});
     } else {
       using std::swap;
-      swap(err(), rhs.err());
+      swap(error(), rhs.error());
     }
   }
 
@@ -2462,8 +2465,8 @@ constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
 
 template <class T, class E,
           detail::enable_if_t<(std::is_void<T>::value ||
-                               std::is_move_constructible<T>::value) &&
-                              detail::is_swappable<T>::value &&
+                              (std::is_move_constructible<T>::value &&
+                               detail::is_swappable<T>::value)) &&
                               std::is_move_constructible<E>::value &&
                               detail::is_swappable<E>::value> * = nullptr>
 void swap(expected<T, E> &lhs,

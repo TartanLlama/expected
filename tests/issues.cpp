@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <system_error>
+#include <vector>
 
 using std::string;
 
@@ -221,4 +222,9 @@ TEST_CASE("Issue 145", "[issues.145]") {
   tl::expected<MoveOnly, std::error_code> a{};
   tl::expected<MoveOnly, std::error_code> b = std::move(a);
   a = std::move(b);
+}
+
+TEST_CASE("Issue 184", "[issues.184]") {
+  tl::expected<std::vector<int>, int> value(tl::in_place, {1, 2, 3});
+  REQUIRE(*value == std::vector<int>{1, 2, 3});
 }

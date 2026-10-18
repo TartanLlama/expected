@@ -222,3 +222,12 @@ TEST_CASE("Issue 145", "[issues.145]") {
   tl::expected<MoveOnly, std::error_code> b = std::move(a);
   a = std::move(b);
 }
+
+TEST_CASE("Issue 183", "[issues.183]") {
+#if !defined(__GNUC__) || defined(__clang__) || __GNUC__ > 5
+  constexpr tl::expected<void, int> e;
+  static_assert(e.has_value(), "default-constructed expected<void, E> must have value");
+  REQUIRE(e.has_value());
+#endif
+}
+

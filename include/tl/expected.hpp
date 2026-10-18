@@ -639,7 +639,7 @@ template <class T, class E> struct expected_storage_base<T, E, false, true> {
 
 // `T` is `void`, `E` is trivially-destructible
 template <class E> struct expected_storage_base<void, E, false, true> {
-  #if __GNUC__ <= 5
+  #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ <= 5
   //no constexpr for GCC 4/5 bug
   #else
   TL_EXPECTED_MSVC2015_CONSTEXPR
